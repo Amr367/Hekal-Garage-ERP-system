@@ -18,6 +18,32 @@ abstract final class MoneyUtils {
     '٩': '9',
   };
 
+  /// Persian/Urdu digits mapping.
+  static const Map<String, String> _persianDigits = <String, String>{
+    '۰': '0',
+    '۱': '1',
+    '۲': '2',
+    '۳': '3',
+    '۴': '4',
+    '۵': '5',
+    '۶': '6',
+    '۷': '7',
+    '۸': '8',
+    '۹': '9',
+  };
+
+  /// Converts Arabic-Indic and Eastern digits in [input] to standard Western digits (0-9).
+  static String normalizeDigits(String input) {
+    String text = input;
+    for (final MapEntry<String, String> entry in _arabicIndicDigits.entries) {
+      text = text.replaceAll(entry.key, entry.value);
+    }
+    for (final MapEntry<String, String> entry in _persianDigits.entries) {
+      text = text.replaceAll(entry.key, entry.value);
+    }
+    return text;
+  }
+
   /// Parses user-entered currency string into integer piasters.
   ///
   /// Examples:
@@ -42,9 +68,7 @@ abstract final class MoneyUtils {
     }
 
     // Convert Arabic-Indic digits to Western digits.
-    for (final MapEntry<String, String> entry in _arabicIndicDigits.entries) {
-      cleaned = cleaned.replaceAll(entry.key, entry.value);
-    }
+    cleaned = normalizeDigits(cleaned);
 
     // Check for negative sign.
     bool isNegative = false;
@@ -144,6 +168,22 @@ abstract final class MoneyUtils {
 
     final String signed = isNegative ? '-$formatted' : formatted;
     return withCurrency ? '$signed ج.م' : signed;
+  }
+
+  /// Formats integer [piasters] with currency suffix (e.g. "1,250.00 ج.م").
+  static String formatPounds(int piasters, {bool withCurrency = true}) {
+    return format(piasters, withCurrency: withCurrency);
+  }
+
+  /// Formats integer [piasters] without thousands separators for text input editing
+  /// (e.g. `125050` -> `"1250.50"`, `100` -> `"1.00"`).
+  static String formatPoundsOnly(int piasters) {
+    final bool isNegative = piasters < 0;
+    final int abs = piasters.abs();
+    final int pounds = abs ~/ 100;
+    final int remainder = abs % 100;
+    final String formatted = '$pounds.${remainder.toString().padLeft(2, '0')}';
+    return isNegative ? '-$formatted' : formatted;
   }
 
   static String _formatWithThousands(int value) {

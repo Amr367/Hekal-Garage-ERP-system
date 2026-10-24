@@ -9,6 +9,7 @@ abstract interface class CategoriesRepository {
   Future<int> insertCategory(String name);
   Future<void> renameCategory(int id, String newName);
   Future<void> mergeAndDelete(int sourceCategoryId, int targetCategoryId);
+  Future<void> deleteCategory(int id);
 }
 
 class DriftCategoriesRepository implements CategoriesRepository {
@@ -80,5 +81,26 @@ class DriftCategoriesRepository implements CategoriesRepository {
         throw NotFoundException('القسم المصدر برقم ($sourceCategoryId) غير موجود.');
       }
     });
+  }
+
+  @override
+  Future<void> deleteCategory(int id) async {
+    // Check if category has any items
+    final countQuery = _db.selectOnly(_db.items)
+      ..addColumns([_db.items.id.count()])
+      ..where(_db.items.categoryId.equals(id));
+    final countRow = await countQuery.getSingle();
+    final int itemsCount = countRow.read(_db.items.id.count()) ?? 0;
+
+    if (itemsCount > 0) {
+      throw const BusinessRuleException(
+        'لا يمكن حذف هذا القسم لأنه يحتوي على أصناف مرتبطة. يمكنك نقل أو دمج الأصناف في قسم آخر أولاً.',
+      );
+    }
+
+    final deleted = await (_db.delete(_db.itemCategories)..where((t) => t.id.equals(id))).go();
+    if (deleted == 0) {
+      throw NotFoundException('القسم برقم ($id) غير موجود لحذفه.');
+    }
   }
 }

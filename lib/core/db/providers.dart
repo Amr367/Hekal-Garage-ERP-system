@@ -9,6 +9,7 @@ import 'repositories/services_repository.dart';
 import 'repositories/settings_repository.dart';
 import 'repositories/suppliers_repository.dart';
 import 'repositories/vehicles_repository.dart';
+import 'repositories/work_orders_repository.dart';
 import 'services/numbering_service.dart';
 import 'services/stock_service.dart';
 
@@ -46,6 +47,13 @@ final suppliersRepositoryProvider = Provider<SuppliersRepository>((ref) {
 
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   return DriftSettingsRepository(ref.watch(appDatabaseProvider));
+});
+
+final workOrdersRepositoryProvider = Provider<WorkOrdersRepository>((ref) {
+  return DriftWorkOrdersRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(stockServiceProvider),
+  );
 });
 
 /// Domain services providers.

@@ -287,7 +287,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Watches all items with their current stock levels.
-  Stream<List<ItemWithStock>> watchStockLevels() {
+  Stream<List<DbItemWithStock>> watchStockLevels() {
     final qtySum = stockMovements.qty.sum();
     final query = select(items).join([
       leftOuterJoin(
@@ -302,7 +302,7 @@ class AppDatabase extends _$AppDatabase {
       return rows.map((row) {
         final item = row.readTable(items);
         final onHand = row.read(qtySum) ?? 0.0;
-        return ItemWithStock(item: item, onHand: onHand);
+        return DbItemWithStock(item: item, onHand: onHand);
       }).toList();
     });
   }
@@ -351,8 +351,8 @@ class AppDatabase extends _$AppDatabase {
 }
 
 /// Helper model pairing an [Item] with its calculated stock on hand.
-class ItemWithStock {
-  const ItemWithStock({
+class DbItemWithStock {
+  const DbItemWithStock({
     required this.item,
     required this.onHand,
   });
