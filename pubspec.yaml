@@ -1,0 +1,49 @@
+name: garage_erp
+description: Offline Windows desktop system for an Egyptian car service center and parts warehouse.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter # Arabic RTL Material widgets and date/number formatting delegates.
+
+  collection: ^1.19.1 # Grouping and lookups used by inventory and report logic.
+  crypto: ^3.0.7 # Salted PIN hashing (SHA-256), never store the PIN itself.
+  drift: ^2.32.0 # Typed SQLite database layer for all business data.
+  excel: ^4.0.6 # Import and export .xlsx stock and report files.
+  file_picker: ^10.3.10 # Local file dialogs for logo, Excel, backup, and PDF save.
+  flutter_riverpod: ^3.2.1 # App-wide providers; database is closed on dispose.
+  go_router: ^17.1.0 # Declarative routes inside the RTL shell.
+  intl: ^0.20.2 # Dates as dd/MM/yyyy and Western digits, locale ar_EG.
+  path: ^1.9.1 # Join database, backup, logo, and log file paths.
+  path_provider: ^2.1.5 # Application support directory for garage.sqlite.
+  pdf: ^3.11.3 # Build A4 invoices and 80mm receipts as PDF documents.
+  printing: ^5.14.2 # Preview, list printers, and print locally with no network.
+  sqlite3_flutter_libs: ^0.5.41 # Bundled SQLite so the app runs offline on Windows.
+  window_manager: ^0.5.1 # Window title, minimum size 1100x700, and close-to-backup hook.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.13.1 # Code generation driver for drift.
+  drift_dev: ^2.32.0 # Generates database code and schema dumps.
+  flutter_lints: ^6.0.0 # Base lint set, plus extra rules in analysis_options.yaml.
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/fonts/
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
