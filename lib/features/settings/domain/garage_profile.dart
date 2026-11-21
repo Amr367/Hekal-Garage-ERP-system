@@ -13,6 +13,9 @@ class GarageProfile {
     this.taxNumber = '',
     this.commercialReg = '',
     this.invoiceFooterNote = AppStrings.invoiceFooterNoteDefault,
+    this.customSummaryBarLeft = '',
+    this.customSummaryBarRight = '',
+    this.customDisclaimer = '',
     this.logoPath,
   });
 
@@ -24,6 +27,9 @@ class GarageProfile {
   final String taxNumber;
   final String commercialReg;
   final String invoiceFooterNote;
+  final String? customSummaryBarLeft;
+  final String? customSummaryBarRight;
+  final String? customDisclaimer;
   final String? logoPath;
 
   bool get hasLogo => logoPath != null && logoPath!.trim().isNotEmpty;
@@ -37,6 +43,9 @@ class GarageProfile {
     String? taxNumber,
     String? commercialReg,
     String? invoiceFooterNote,
+    String? customSummaryBarLeft,
+    String? customSummaryBarRight,
+    String? customDisclaimer,
     String? logoPath,
     bool clearLogo = false,
   }) {
@@ -49,6 +58,9 @@ class GarageProfile {
       taxNumber: taxNumber ?? this.taxNumber,
       commercialReg: commercialReg ?? this.commercialReg,
       invoiceFooterNote: invoiceFooterNote ?? this.invoiceFooterNote,
+      customSummaryBarLeft: customSummaryBarLeft ?? this.customSummaryBarLeft,
+      customSummaryBarRight: customSummaryBarRight ?? this.customSummaryBarRight,
+      customDisclaimer: customDisclaimer ?? this.customDisclaimer,
       logoPath: clearLogo ? null : (logoPath ?? this.logoPath),
     );
   }

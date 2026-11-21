@@ -262,9 +262,9 @@ class WorkOrdersPage extends ConsumerWidget {
           ),
         ),
 
-        // Complaint & Mechanic
+        // Complaint & Receiver Employee
         AppTableColumn<WorkOrderWithDetails>(
-          title: 'الشكوى / الفني',
+          title: 'الشكوى / المستلم',
           flex: 2,
           cellBuilder: (context, it, index) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,7 +278,7 @@ class WorkOrdersPage extends ConsumerWidget {
               ),
               if (it.workOrder.mechanicName != null)
                 Text(
-                  'الفني: ${it.workOrder.mechanicName}',
+                  'المستلم: ${it.workOrder.mechanicName}',
                   style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -321,13 +321,54 @@ class WorkOrdersPage extends ConsumerWidget {
           ),
         ),
 
-        // Created At
+        // Entry & Exit Dates
         AppTableColumn<WorkOrderWithDetails>(
-          title: 'تاريخ الاستلام',
-          width: 125,
-          cellBuilder: (context, it, index) => Text(
-            it.formattedCreatedAt,
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+          title: 'دخول / خروج الصيانة',
+          width: 175,
+          cellBuilder: (context, it, index) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.login_rounded, size: 12, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      it.formattedEntryDate,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    it.isDelivered ? Icons.check_circle_outline : Icons.event_available_outlined,
+                    size: 12,
+                    color: it.isDelivered ? AppColors.success : (it.expectedExitDate != null ? AppColors.warning : AppColors.textSecondary),
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      it.isDelivered
+                          ? 'تسليم: ${it.formattedActualExitDate}'
+                          : (it.expectedExitDate != null ? 'خروج: ${it.formattedExpectedExitDate}' : 'الخروج: غير محدد'),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: it.isDelivered ? FontWeight.bold : FontWeight.normal,
+                        color: it.isDelivered ? AppColors.success : (it.expectedExitDate != null ? AppColors.primary : AppColors.textSecondary),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
 

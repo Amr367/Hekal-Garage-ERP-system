@@ -1,16 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_data_table.dart';
 import '../../core/widgets/app_scaffold.dart';
+import '../../core/widgets/state_views.dart';
+import '../inventory/presentation/inventory_controller.dart';
+import '../invoices/presentation/invoices_controller.dart';
+import '../work_orders/domain/work_order_with_details.dart';
+import '../work_orders/presentation/work_orders_controller.dart';
 
-/// Main Dashboard showing key business metrics and quick shortcuts.
-class DashboardPage extends StatelessWidget {
+/// Main Dashboard showing live key business metrics and quick shortcuts.
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final invoicesSummaryAsync = ref.watch(invoicesSummaryProvider);
+    final workOrdersSummaryAsync = ref.watch(workOrdersSummaryProvider);
+    final inventorySummaryAsync = ref.watch(inventorySummaryProvider);
+    final workOrdersAsync = ref.watch(workOrdersListProvider);
+
+    final todaySalesText = invoicesSummaryAsync.value?.formattedTodaySales ?? '٠٫٠٠ ${AppStrings.currencySymbol}';
+    final openOrdersText = '${workOrdersSummaryAsync.value?.activeWorkshopCount ?? 0} أمر صيانة';
+    final lowStockCount = (inventorySummaryAsync.value?.lowStockCount ?? 0) + (inventorySummaryAsync.value?.outOfStockCount ?? 0);
+    final lowStockText = '$lowStockCount صنف';
+    final receivablesText = invoicesSummaryAsync.value?.formattedTotalRemaining ?? '٠٫٠٠ ${AppStrings.currencySymbol}';
+
+    final recentOrders = (workOrdersAsync.value ?? const <WorkOrderWithDetails>[]).take(6).toList();
+
     return AppScaffold(
       title: AppStrings.dashboardTitle,
       subtitle: AppStrings.dashboardSubtitle,
@@ -25,30 +44,30 @@ class DashboardPage extends StatelessWidget {
               final bool wrapCards = cardWidth < 220;
 
               final List<Widget> cards = <Widget>[
-                const _MetricCard(
+                _MetricCard(
                   title: AppStrings.metricTodaySales,
-                  value: '٠٫٠٠ ${AppStrings.currencySymbol}',
+                  value: todaySalesText,
                   icon: Icons.trending_up_rounded,
                   color: AppColors.success,
                   containerColor: AppColors.successContainer,
                 ),
-                const _MetricCard(
+                _MetricCard(
                   title: AppStrings.metricOpenWorkOrders,
-                  value: '٠ أمر صيانة',
+                  value: openOrdersText,
                   icon: Icons.build_circle_outlined,
                   color: AppColors.primary,
                   containerColor: AppColors.primaryContainer,
                 ),
-                const _MetricCard(
+                _MetricCard(
                   title: AppStrings.metricLowStock,
-                  value: '٠ صنف',
+                  value: lowStockText,
                   icon: Icons.inventory_2_outlined,
                   color: AppColors.warning,
                   containerColor: AppColors.warningContainer,
                 ),
-                const _MetricCard(
+                _MetricCard(
                   title: AppStrings.metricReceivables,
-                  value: '٠٫٠٠ ${AppStrings.currencySymbol}',
+                  value: receivablesText,
                   icon: Icons.account_balance_wallet_outlined,
                   color: AppColors.danger,
                   containerColor: AppColors.dangerContainer,
@@ -117,6 +136,16 @@ class DashboardPage extends StatelessWidget {
                         icon: const Icon(Icons.add_box_outlined),
                         label: const Text(AppStrings.actionAddItem),
                       ),
+                      OutlinedButton.icon(
+                        onPressed: () => context.go('/expenses'),
+                        icon: const Icon(Icons.account_balance_wallet_outlined),
+                        label: const Text('تسجيل مصروف'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => context.go('/employees'),
+                        icon: const Icon(Icons.badge_outlined),
+                        label: const Text('الموظفين والرواتب'),
+                      ),
                     ],
                   ),
                 ],
@@ -133,42 +162,83 @@ class DashboardPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const Text(
-                    AppStrings.recentWorkOrders,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        AppStrings.recentWorkOrders,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => context.go('/work-orders'),
+                        icon: const Icon(Icons.arrow_back, size: 16),
+                        label: const Text('عرض جميع الأوامر'),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
-                    height: 240,
-                    child: AppDataTable<Map<String, String>>(
-                      columns: <AppTableColumn<Map<String, String>>>[
-                        AppTableColumn<Map<String, String>>(
+                    height: 260,
+                    child: AppDataTable<WorkOrderWithDetails>(
+                      columns: <AppTableColumn<WorkOrderWithDetails>>[
+                        AppTableColumn<WorkOrderWithDetails>(
                           title: 'رقم الأمر',
                           flex: 1,
-                          cellBuilder: (_, item, index) => Text(item['orderNo'] ?? ''),
+                          cellBuilder: (_, item, index) => Text(
+                            item.orderNumberFormatted,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                        AppTableColumn<Map<String, String>>(
+                        AppTableColumn<WorkOrderWithDetails>(
                           title: 'العميل',
                           flex: 2,
-                          cellBuilder: (_, item, index) => Text(item['customer'] ?? ''),
+                          cellBuilder: (_, item, index) => Text(item.customer.name),
                         ),
-                        AppTableColumn<Map<String, String>>(
+                        AppTableColumn<WorkOrderWithDetails>(
                           title: 'السيارة',
                           flex: 2,
-                          cellBuilder: (_, item, index) => Text(item['vehicle'] ?? ''),
+                          cellBuilder: (_, item, index) => Text(
+                            '${item.vehicle.plateNumber} ${item.vehicle.make != null ? "(${item.vehicle.make})" : ""}',
+                          ),
                         ),
-                        AppTableColumn<Map<String, String>>(
+                        AppTableColumn<WorkOrderWithDetails>(
                           title: 'الحالة',
                           flex: 1,
-                          cellBuilder: (_, item, index) => Text(item['status'] ?? ''),
+                          cellBuilder: (_, item, index) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: item.statusColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              item.statusArabic,
+                              style: TextStyle(
+                                color: item.statusColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                         ),
-                        AppTableColumn<Map<String, String>>(
-                          title: 'الإجمالي',
+                        AppTableColumn<WorkOrderWithDetails>(
+                          title: 'الإجمالي التقديري',
                           flex: 1,
-                          cellBuilder: (_, item, index) => Text(item['total'] ?? ''),
+                          cellBuilder: (_, item, index) => Text(
+                            item.formattedTotal,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
                       ],
-                      items: const <Map<String, String>>[],
+                      items: recentOrders,
+                      onRowTap: (item) {
+                        ref.read(selectedWorkOrderIdProvider.notifier).set(item.id);
+                        context.go('/work-orders');
+                      },
+                      emptyWidget: const EmptyState(
+                        title: 'لا توجد أوامر صيانة حالياً',
+                        subtitle: 'يمكنك إنشاء أمر شغل جديد من زر الإجراءات السريعة',
+                        icon: Icons.build_circle_outlined,
+                      ),
                     ),
                   ),
                 ],

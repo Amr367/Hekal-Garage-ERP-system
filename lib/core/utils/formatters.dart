@@ -100,4 +100,7 @@ abstract final class Formatters {
     }
     return formatted;
   }
+
+  /// Shorthand alias for [formatQuantity].
+  static String formatQty(double qty) => formatQuantity(qty);
 }

@@ -94,6 +94,33 @@ class WorkOrderWithDetails {
     return '$year/$month/$day $hour:$min';
   }
 
+  DateTime get entryDate => workOrder.entryDate ?? workOrder.createdAt;
+  DateTime? get expectedExitDate => workOrder.expectedExitDate;
+  DateTime? get actualExitDate => workOrder.closedAt;
+
+  static String _formatDateTime(DateTime d) {
+    final day = d.day.toString().padLeft(2, '0');
+    final month = d.month.toString().padLeft(2, '0');
+    final year = d.year.toString();
+    final hourInt = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    final hour = hourInt.toString().padLeft(2, '0');
+    final min = d.minute.toString().padLeft(2, '0');
+    final amPm = d.hour >= 12 ? 'م' : 'ص';
+    return '$year/$month/$day $hour:$min $amPm';
+  }
+
+  String get formattedEntryDate => _formatDateTime(entryDate);
+
+  String get formattedExpectedExitDate {
+    if (workOrder.expectedExitDate == null) return 'غير محدد';
+    return _formatDateTime(workOrder.expectedExitDate!);
+  }
+
+  String get formattedActualExitDate {
+    if (workOrder.closedAt == null) return '—';
+    return _formatDateTime(workOrder.closedAt!);
+  }
+
   String get formattedClosedAt {
     if (workOrder.closedAt == null) return '-';
     final d = workOrder.closedAt!;

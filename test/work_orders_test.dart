@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:garage_erp/core/db/database.dart';
 import 'package:garage_erp/core/db/providers.dart';
 import 'package:garage_erp/core/db/repositories/customers_repository.dart';
+import 'package:garage_erp/core/db/repositories/employees_repository.dart';
 import 'package:garage_erp/core/db/repositories/items_repository.dart';
 import 'package:garage_erp/core/db/repositories/services_repository.dart';
 import 'package:garage_erp/core/db/repositories/vehicles_repository.dart';
@@ -30,6 +31,7 @@ void main() {
   late ServicesRepository servicesRepo;
   late ItemsRepository itemsRepo;
   late WorkOrdersRepository workOrdersRepo;
+  late EmployeesRepository employeesRepo;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
@@ -38,6 +40,7 @@ void main() {
     servicesRepo = DriftServicesRepository(db);
     itemsRepo = DriftItemsRepository(db);
     workOrdersRepo = DriftWorkOrdersRepository(db);
+    employeesRepo = DriftEmployeesRepository(db);
   });
 
   tearDown(() async {
@@ -206,6 +209,34 @@ void main() {
       expect(updated.workOrder.mechanicName, equals('المهندس كريم'));
       expect(updated.lines.length, equals(1));
       expect(updated.totalPiasters, equals(20000));
+    });
+
+    test('create and update work order persists entryDate and expectedExitDate', () async {
+      final (custId, vehId) = await setupCustomerAndVehicle();
+      final entry = DateTime(2026, 10, 27, 10, 30);
+      final exit = DateTime(2026, 10, 28, 18, 0);
+
+      final order = await workOrdersRepo.createWorkOrder(
+        customerId: custId,
+        vehicleId: vehId,
+        entryDate: entry,
+        expectedExitDate: exit,
+        complaint: 'صيانة كاملة',
+      );
+
+      expect(order.entryDate, equals(entry));
+      expect(order.expectedExitDate, equals(exit));
+      expect(order.formattedEntryDate, contains('2026/10/27'));
+      expect(order.formattedExpectedExitDate, contains('2026/10/28'));
+
+      final newExit = DateTime(2026, 10, 29, 12, 0);
+      final updated = await workOrdersRepo.updateWorkOrder(
+        id: order.id,
+        expectedExitDate: newExit,
+      );
+
+      expect(updated.expectedExitDate, equals(newExit));
+      expect(updated.formattedExpectedExitDate, contains('2026/10/29'));
     });
 
     test('status transitions: open -> inProgress -> ready -> delivered sets closedAt', () async {
@@ -497,6 +528,43 @@ void main() {
       expect(delivered.paymentReference, equals('01012345678-TXN9988'));
       expect(delivered.paymentMethodArabic, equals(AppStrings.paymentMethodWallet));
     });
+
+    test('getLastWorkOrderForCustomer returns the most recent prior work order for customer', () async {
+      final (custId, vehId) = await setupCustomerAndVehicle(
+        name: 'عماد شلبي',
+        phone: '01012345678',
+        plate: 'س ر ج 555',
+      );
+
+      final initial = await workOrdersRepo.getLastWorkOrderForCustomer(custId);
+      expect(initial, isNull);
+
+      final o1 = await workOrdersRepo.createWorkOrder(
+        customerId: custId,
+        vehicleId: vehId,
+        complaint: 'صيانة أولى',
+        odometer: 10000,
+      );
+
+      final afterFirst = await workOrdersRepo.getLastWorkOrderForCustomer(custId);
+      expect(afterFirst, isNotNull);
+      expect(afterFirst!.workOrder.id, equals(o1.id));
+      expect(afterFirst.workOrder.complaint, equals('صيانة أولى'));
+
+      final o2 = await workOrdersRepo.createWorkOrder(
+        customerId: custId,
+        vehicleId: vehId,
+        complaint: 'صيانة ثانية',
+        odometer: 20000,
+      );
+
+      final afterSecond = await workOrdersRepo.getLastWorkOrderForCustomer(custId);
+      expect(afterSecond!.workOrder.id, equals(o2.id));
+      expect(afterSecond.workOrder.complaint, equals('صيانة ثانية'));
+
+      final excludeO2 = await workOrdersRepo.getLastWorkOrderForCustomer(custId, excludeWorkOrderId: o2.id);
+      expect(excludeO2!.workOrder.id, equals(o1.id));
+    });
   });
 
   group('Work Orders UI Widget Tests', () {
@@ -509,6 +577,7 @@ void main() {
           servicesRepositoryProvider.overrideWithValue(servicesRepo),
           itemsRepositoryProvider.overrideWithValue(itemsRepo),
           workOrdersRepositoryProvider.overrideWithValue(workOrdersRepo),
+          employeesRepositoryProvider.overrideWithValue(employeesRepo),
           stockServiceProvider.overrideWithValue(StockService(db)),
         ],
         child: MaterialApp(
@@ -569,6 +638,18 @@ void main() {
       expect(find.text(AppStrings.newWorkOrderButton), findsOneWidget);
       expect(find.text(AppStrings.complaintLabel), findsOneWidget);
 
+      // Search for customer by name and select from search results
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'ابحث عن العميل (الاسم أو رقم الهاتف أو رقم اللوحة)'),
+        'طارق',
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      expect(find.text('طارق حسام'), findsOneWidget);
+      await tester.tap(find.text('طارق حسام'));
+      await tester.pumpAndSettle();
+
       // Enter complaint
       await tester.enterText(
         find.widgetWithText(TextFormField, AppStrings.complaintLabel),
@@ -583,6 +664,104 @@ void main() {
       final orders = await workOrdersRepo.getWorkOrders();
       expect(orders.length, equals(1));
       expect(orders.first.workOrder.complaint, equals('فحص دوري كامل وتغيير سيور'));
+    });
+
+    testWidgets('WorkOrderFormDialog allows selecting receiving employee from workshop employees', (tester) async {
+      await employeesRepo.insertEmployee(
+        const EmployeesCompanion(
+          name: drift.Value('المهندس حازم'),
+          role: drift.Value('مهندس استقبال صيانة'),
+          phone: drift.Value('01011112222'),
+        ),
+      );
+
+      await setupCustomerAndVehicle(
+        name: 'كريم نبيل',
+        phone: '01099998888',
+        plate: 'س ع د 7777',
+      );
+
+      tester.view.physicalSize = const Size(1200, 850);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(buildTestApp(child: const WorkOrderFormDialog()));
+      await tester.pumpAndSettle();
+
+      // Search and select customer
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'ابحث عن العميل (الاسم أو رقم الهاتف أو رقم اللوحة)'),
+        '01099998888',
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('كريم نبيل'));
+      await tester.pumpAndSettle();
+
+      // Because there is 1 active employee, it auto-selects them
+      expect(find.text('المهندس حازم (مهندس استقبال صيانة)'), findsOneWidget);
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, AppStrings.complaintLabel),
+        'كشف وصيانة',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('فتح أمر الشغل'));
+      await tester.pumpAndSettle();
+
+      final orders = await workOrdersRepo.getWorkOrders();
+      final latest = orders.firstWhere((o) => o.customer.name == 'كريم نبيل');
+      expect(latest.workOrder.mechanicName, equals('المهندس حازم'));
+    });
+
+    testWidgets('WorkOrderFormDialog searches customer and displays previous maintenance history', (tester) async {
+      final (custId, vehId) = await setupCustomerAndVehicle(
+        name: 'عصام عبد الرحمن',
+        phone: '01055556666',
+        plate: 'ف ر س 1234',
+      );
+
+      // Create prior work order for this customer
+      await workOrdersRepo.createWorkOrder(
+        customerId: custId,
+        vehicleId: vehId,
+        complaint: 'تغيير زيت وفلاتر',
+        mechanicName: 'أسامة فني',
+        odometer: 60000,
+      );
+
+      tester.view.physicalSize = const Size(1200, 850);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(buildTestApp(child: const WorkOrderFormDialog()));
+      await tester.pumpAndSettle();
+
+      // Initially search field is visible and no customers listed by default
+      expect(find.widgetWithText(TextFormField, 'ابحث عن العميل (الاسم أو رقم الهاتف أو رقم اللوحة)'), findsOneWidget);
+      expect(find.text('عصام عبد الرحمن'), findsNothing);
+
+      // Search by phone
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'ابحث عن العميل (الاسم أو رقم الهاتف أو رقم اللوحة)'),
+        '01055556666',
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      // Found in search results
+      expect(find.text('عصام عبد الرحمن'), findsOneWidget);
+
+      // Tap customer to select
+      await tester.tap(find.text('عصام عبد الرحمن'));
+      await tester.pumpAndSettle();
+
+      // Customer details and last maintenance record appear
+      expect(find.textContaining('آخر صيانة مسجلة للعميل'), findsOneWidget);
+      expect(find.textContaining('تغيير زيت وفلاتر'), findsOneWidget);
+      expect(find.textContaining('60000 كم'), findsOneWidget);
     });
 
     testWidgets('WorkOrderDetailsPane displays order details and advances status', (tester) async {
@@ -718,10 +897,12 @@ void main() {
       expect(find.text('إنستاباي (InstaPay)'), findsOneWidget);
 
       // Select InstaPay
+      await tester.ensureVisible(find.text('إنستاباي (InstaPay)'));
       await tester.tap(find.text('إنستاباي (InstaPay)'));
       await tester.pumpAndSettle();
 
       // Enter transaction reference
+      await tester.ensureVisible(find.widgetWithText(TextFormField, AppStrings.paymentReferenceLabel));
       await tester.enterText(
         find.widgetWithText(TextFormField, AppStrings.paymentReferenceLabel),
         'IPN-REF-2026-X1',
@@ -729,6 +910,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Submit
+      await tester.ensureVisible(find.text(AppStrings.confirmDeliveryAndPayment));
       await tester.tap(find.text(AppStrings.confirmDeliveryAndPayment));
       await tester.pumpAndSettle();
 

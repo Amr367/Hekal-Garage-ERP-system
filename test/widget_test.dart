@@ -8,7 +8,7 @@ import 'package:garage_erp/core/strings.dart';
 import 'package:garage_erp/main.dart';
 
 void main() {
-  testWidgets('app shell boots into RTL Dashboard with 9 navigation destinations', (
+  testWidgets('app shell boots into RTL Dashboard with 11 navigation destinations', (
     WidgetTester tester,
   ) async {
     // Provide in-memory test database
@@ -48,6 +48,8 @@ void main() {
     expect(find.text(AppStrings.navInventory), findsOneWidget);
     expect(find.text(AppStrings.navPurchases), findsOneWidget);
     expect(find.text(AppStrings.navStockCount), findsOneWidget);
+    expect(find.text(AppStrings.navExpenses), findsOneWidget);
+    expect(find.text(AppStrings.navEmployees), findsAtLeastNWidgets(1));
     expect(find.text(AppStrings.navReports), findsOneWidget);
     expect(find.text(AppStrings.navSettings), findsOneWidget);
   });

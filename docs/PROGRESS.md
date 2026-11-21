@@ -2,7 +2,7 @@
 
 ## Current phase
 
-Phase 7 — Work Orders (أوامر الشغل): **completed**. Ready for Phase 8.
+Delivery hardening — backup/restore, close-to-backup, integrity check, and release guards: **in progress / completed**. All operational phases 0–9 plus invoicing, reports, and services are in the codebase.
 
 ## Completed
 
@@ -186,13 +186,79 @@ Phase 7 — Work Orders (أوامر الشغل): **completed**. Ready for Phase 
 - Verified all 96 tests pass across the entire project test suite (100% pass rate).
 - Verified Windows desktop debug build succeeds (`garage_erp.exe`).
 
+### Phase 8 — Purchases & Suppliers (المشتريات والموردين)
+- Authored comprehensive Arabic UI strings in `lib/core/strings.dart` for purchases and suppliers operations (purchases management, supplier profiles, debts, payments, line items, and invoice creation).
+- Implemented domain models in `lib/features/purchases/domain/`:
+  - `SupplierWithBalance`: Supplier entity with invoices count, total purchases, total paid, and balance due in integer piasters (Rule R1).
+  - `PurchaseLineItem`: Single line in a purchase invoice with item metadata, quantity, unit purchase cost, and formatted currency/qty displays.
+  - `PurchaseInvoiceWithDetails`: Purchase invoice aggregate holding supplier, lines list, payment status (paid, partial, unpaid), total, paid, and remaining debt.
+  - `PurchasesSummary`: Desktop summary metric aggregate (total purchases, total debt owed to suppliers, active suppliers count, this month's purchases).
+- Enhanced `SuppliersRepository` in `lib/core/db/repositories/suppliers_repository.dart`:
+  - `getSuppliersWithBalances`: Joins and aggregates purchase invoices per supplier to compute real-time balances.
+  - `recordPayment`: Atomically distributes supplier payments across oldest unpaid purchase invoices.
+  - `deactivate` / `reactivate` lifecycle management.
+- Implemented `PurchasesRepository` and `DriftPurchasesRepository` in `lib/core/db/repositories/purchases_repository.dart`:
+  - `createPurchaseInvoice`: In a single atomic SQLite transaction, inserts purchase invoice, creates lines, records inbound stock movements via `StockService.addMovement` with `StockMovementType.purchaseIn` (Rules R2, R3), and updates the item's latest cost price in the `items` table (Rule R8).
+  - Multi-field smart search matching supplier name, phone, supplier invoice number, or internal ID.
+  - `getPurchasesSummary`: Computes live financial summary metrics.
+- Registered `purchasesRepositoryProvider` in `lib/core/db/providers.dart`.
+- Implemented Riverpod providers and action controller in `lib/features/purchases/presentation/purchases_controller.dart`.
+- Implemented desktop UI widgets and dialogs in `lib/features/purchases/presentation/widgets/`:
+  - `PurchasesKpiCards`: 4 desktop summary KPI cards (إجمالي المشتريات، مديونية الموردين، الموردين النشطين، مشتريات الشهر).
+  - `PurchaseDetailsPane`: Desktop master-detail pane with supplier contact info, financial breakdown, and line items table.
+  - `PurchaseInvoiceFormDialog`: Purchase invoice creation modal with supplier selection, date picker, interactive line items picker with live inventory stock, grand total calculation, and paid/debt tracking.
+  - `SuppliersDialog` & `SupplierFormDialog`: Dedicated supplier management modal with balance cards, add/edit actions, and `SupplierPaymentDialog` for recording supplier debt payments.
+- Implemented full `PurchasesPage` in `lib/features/purchases/purchases_page.dart` with KPI summary banner, search & supplier filter toolbar, virtualized data table (`rowHeight: 52`), and split master-detail view.
+- Added comprehensive unit and widget tests in `test/purchases_test.dart` (9 tests covering supplier validation, deactivation/reactivation, debt calculation, payment distribution, stock movements, cost price updating, summary metrics, page rendering, supplier form, and purchase creation dialog).
+- Verified `flutter analyze` clean with 0 warnings/errors.
+- Verified all 105 tests pass across the entire project test suite (100% pass rate).
+- Verified Windows desktop debug build succeeds (`garage_erp.exe`).
+
+### Phase 9 — Invoicing, Stock Count, Reports, Employees, Expenses & Delivery Hardening
+- **Invoicing & Sales (الفواتير والمبيعات):**
+  - Direct sales and work-order linked invoices with gap-free sequential numbering (Rule R6).
+  - Snapshot pricing for items and services (Rule R8) and stock deductions via `StockService.addMovement` (Rule R2, R3, R4).
+  - Payment methods support: خزنة الفرع (كاش), فودافون كاش (محفظة), إنستاباي (InstaPay), وفيزا/بطاقة.
+  - A4 and 80mm thermal receipt vector printing with Cairo font (`InvoicePrintBuilder`, `A4InvoiceBuilder`, `ReceiptBuilder`).
+- **Stock Count (الجرد السنوي والمخزني):**
+  - Sessions management (مسودة قيد العد، معتمد ومحفوظ).
+  - Scopes: جرد شامل، جرد حسب التصنيف، جرد الأصناف النشطة.
+  - Automatic discrepancy recording as explicit `countDiff` stock movements through `StockService`.
+- **Financial Reports & Analytics (التقارير المالية):**
+  - Sales, inventory valuation, debts, and comprehensive profit/loss reports.
+  - Excel workbook export (`excel_export_service.dart`) with multi-sheet reports.
+- **Employees & Payroll (الموظفين والرواتب):**
+  - Staff management, monthly/daily salary schemes, salary advances ledger, and disbursement records.
+- **Operating Expenses (مصروفات المركز):**
+  - Categorized expense recording, daily and monthly aggregates.
+- **Purchase Invoices Printing (طباعة فواتير وإذن التوريد):**
+  - Dedicated A4 vector PDF generation via `PurchasePrintBuilder` with Cairo TTF fonts, garage branding, supplier details, itemized lines table, financial summary, Tafqeet Arabic words conversion, and signature blocks.
+  - Interactive preview dialog (`PurchasePreviewDialog`) in `PurchaseDetailsPane`.
+- **Delivery Hardening:**
+  - Robust SQLite backup using `VACUUM INTO` for consistent offline snapshots.
+  - Automatic backup on window close (keeping the latest 14 snapshots).
+  - SQLite `integrity_check` for corruption detection.
+  - Starting document numbering configuration.
+  - Release build verification (`flutter build windows --release`).
+
 ## Decisions made this phase
 
 See `docs/DECISIONS.md`.
 
-## Open issues
+### Delivery hardening (post Phase 9)
 
-- Invoicing phase postponed to the very end per user direction (*"من نخلي مرحله فاتوره دي اخر حاجه عشان هغير شكله كلو"*).
-- Customer arrives with work order in hand (*"تمام انا عميل هيجي معيا بي امر الشغل اصلا"*).
-- Ready for Phase 8.
+- Backup/restore from Settings with `VACUUM INTO`, PIN-gated restore, and WAL sidecar cleanup.
+- Automatic backup on window close (last 14 files in the `backups` folder).
+- SQLite `integrity_check` action and starting invoice/work-order numbers.
+- `/dev/print-test` and Ctrl+P print-test route restricted to debug builds.
+- Profit report Excel export.
+- Company-facing `README.md` for install, data location, and backup.
+
+## Current status
+
+- All operational and business modules (Phases 0–9) fully implemented and tested.
+- 164/164 tests passing across unit, repository, service, and UI widget suites (100% pass rate).
+- `flutter analyze` reports 0 issues / 0 warnings.
+- Production-ready offline Flutter Windows desktop application.
+
 

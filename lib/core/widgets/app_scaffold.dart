@@ -35,43 +35,95 @@ class AppScaffold extends StatelessWidget {
           bottom: BorderSide(color: AppColors.divider, width: 1),
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool isCompact = (constraints.maxWidth <
+                  (actions.length > 3
+                      ? 1200
+                      : actions.length > 2
+                          ? 850
+                          : 640)) &&
+              actions.isNotEmpty;
+          if (isCompact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Text(
-                  title,
-                  style: textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                if (subtitle != null) ...<Widget>[
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle!,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      title,
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
                     ),
-                  ),
-                ],
+                    if (subtitle != null) ...<Widget>[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: actions,
+                ),
               ],
-            ),
-          ),
-          if (actions.isNotEmpty) ...<Widget>[
-            const SizedBox(width: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: actions,
-            ),
-          ],
-        ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    if (subtitle != null) ...<Widget>[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (actions.isNotEmpty) ...<Widget>[
+                const SizedBox(width: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: actions,
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/services/excel_export_service.dart';
 import '../../core/strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_data_table.dart';
@@ -10,6 +11,7 @@ import '../../core/widgets/state_views.dart';
 import 'domain/item_with_stock.dart';
 import 'presentation/inventory_controller.dart';
 import 'presentation/widgets/categories_management_dialog.dart';
+import 'presentation/widgets/import_inventory_dialog.dart';
 import 'presentation/widgets/inventory_kpi_cards.dart';
 import 'presentation/widgets/item_details_pane.dart';
 import 'presentation/widgets/item_form_dialog.dart';
@@ -35,13 +37,56 @@ class InventoryPage extends ConsumerWidget {
       title: AppStrings.inventoryTitle,
       subtitle: AppStrings.inventorySubtitle,
       actions: <Widget>[
+        // Export Inventory to Excel Button
+        FilledButton.tonalIcon(
+          onPressed: () async {
+            final items = listAsync.value ?? [];
+            if (items.isEmpty) {
+              AppSnackbar.showWarning(context, 'لا توجد أصناف لتصديرها');
+              return;
+            }
+            final categories = categoriesAsync.value ?? [];
+            final categoryName = selectedCategoryId != null
+                ? categories
+                    .where((c) => c.id == selectedCategoryId)
+                    .firstOrNull
+                    ?.name
+                : null;
+
+            final bytes = ExcelExportService.exportInventoryItemsToExcel(
+              items,
+              categoryFilterName: categoryName,
+            );
+            final now = DateTime.now();
+            final defaultFileName =
+                'inventory_items_${now.year}_${now.month.toString().padLeft(2, '0')}_${now.day.toString().padLeft(2, '0')}.xlsx';
+
+            await ExcelExportService.saveExcelFile(
+              context: context,
+              bytes: bytes,
+              defaultFileName: defaultFileName,
+              dialogTitle: 'تصدير كشف أصناف المخزن إلى Excel',
+              successMessage:
+                  'تم تصدير كشف المخزن بنجاح (${items.length} صنف)',
+            );
+          },
+          icon: const Icon(Icons.file_download_outlined, size: 18),
+          label: const Text(AppStrings.exportExcel),
+        ),
+
+        // Import Inventory from Excel Button
+        OutlinedButton.icon(
+          onPressed: () => ImportInventoryDialog.show(context),
+          icon: const Icon(Icons.upload_file_outlined, size: 18),
+          label: const Text('استيراد من Excel'),
+        ),
+
         // Manage Categories Button
         OutlinedButton.icon(
           onPressed: () => CategoriesManagementDialog.show(context),
           icon: const Icon(Icons.category_outlined, size: 18),
           label: const Text(AppStrings.manageCategoriesButton),
         ),
-        const SizedBox(width: 8),
 
         // Add Item Button
         ElevatedButton.icon(

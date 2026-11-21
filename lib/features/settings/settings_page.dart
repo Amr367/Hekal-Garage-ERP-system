@@ -3,11 +3,13 @@ import '../../core/strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_scaffold.dart';
 import 'presentation/widgets/database_settings_card.dart';
+import 'presentation/widgets/network_settings_card.dart';
 import 'presentation/widgets/printer_settings_card.dart';
 import 'presentation/widgets/profile_settings_card.dart';
 import 'presentation/widgets/security_settings_card.dart';
+import 'presentation/widgets/services_settings_card.dart';
 
-/// Complete Settings screen with tabs for Profile, Printers, Security, and Database.
+/// Complete Settings screen with tabs for Profile, Services, Printers, Security, and Database.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -18,7 +20,7 @@ class SettingsPage extends StatelessWidget {
       subtitle: AppStrings.settingsSubtitle,
       padding: EdgeInsets.zero,
       body: DefaultTabController(
-        length: 4,
+        length: 6,
         child: Column(
           children: <Widget>[
             // ── Tabs Navigation Bar ─────────────────────────────────────────
@@ -51,6 +53,10 @@ class SettingsPage extends StatelessWidget {
                     text: AppStrings.tabProfile,
                   ),
                   Tab(
+                    icon: Icon(Icons.handyman_outlined, size: 20),
+                    text: AppStrings.tabServices,
+                  ),
+                  Tab(
                     icon: Icon(Icons.print_outlined, size: 20),
                     text: AppStrings.tabPrinters,
                   ),
@@ -61,6 +67,10 @@ class SettingsPage extends StatelessWidget {
                   Tab(
                     icon: Icon(Icons.storage_outlined, size: 20),
                     text: AppStrings.tabDatabase,
+                  ),
+                  Tab(
+                    icon: Icon(Icons.lan_outlined, size: 20),
+                    text: 'الربط والشبكة (LAN)',
                   ),
                 ],
               ),
@@ -77,6 +87,17 @@ class SettingsPage extends StatelessWidget {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 960),
                         child: const ProfileSettingsCard(),
+                      ),
+                    ),
+                  ),
+
+                  // Services & Labor Catalog Tab
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 960),
+                        child: const ServicesSettingsCard(),
                       ),
                     ),
                   ),
@@ -110,6 +131,17 @@ class SettingsPage extends StatelessWidget {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 960),
                         child: const DatabaseSettingsCard(),
+                      ),
+                    ),
+                  ),
+
+                  // Network & Multi-device Sync Tab
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 960),
+                        child: const NetworkSettingsCard(),
                       ),
                     ),
                   ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -36,9 +37,12 @@ class AppShell extends StatelessWidget {
 
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
-        // Ctrl+P -> Navigate to Print Test
         const SingleActivator(LogicalKeyboardKey.keyP, control: true): () {
-          context.go('/dev/print-test');
+          if (kDebugMode) {
+            context.go('/dev/print-test');
+          } else {
+            context.go('/invoices');
+          }
         },
         // Ctrl+1..9 -> Quick navigate to tabs
         const SingleActivator(LogicalKeyboardKey.digit1, control: true): () =>
@@ -114,7 +118,7 @@ class AppShell extends StatelessWidget {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  'مركز الصيانة والمخزن',
+                                  AppStrings.sidebarTagline,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.onSurfaceVariant,

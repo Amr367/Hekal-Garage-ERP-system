@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../core/money/money.dart';
+import '../../../core/utils/formatters.dart';
 
 /// Single item line in a purchase invoice.
 @immutable
@@ -23,8 +24,8 @@ class PurchaseLineItem {
   final int totalAmountPiasters;
 
   String get formattedQuantity => Formatters.formatQty(quantity);
-  String get formattedUnitCost => MoneyUtils.formatPiasters(unitCostPiasters);
-  String get formattedTotal => MoneyUtils.formatPiasters(totalAmountPiasters);
+  String get formattedUnitCost => MoneyUtils.format(unitCostPiasters, withCurrency: true);
+  String get formattedTotal => MoneyUtils.format(totalAmountPiasters, withCurrency: true);
 
   PurchaseLineItem copyWith({
     int? itemId,

@@ -10,6 +10,9 @@ void main() {
 
   setUpAll(() async {
     await PdfFontLoader.init();
+    expect(PdfFontLoader.logoMg, isNotNull);
+    expect(PdfFontLoader.logoOpel, isNotNull);
+    expect(PdfFontLoader.logoChevrolet, isNotNull);
   });
 
   group('MoneyFormat', () {

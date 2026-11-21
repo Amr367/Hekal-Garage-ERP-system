@@ -150,6 +150,8 @@ class WorkOrders extends Table {
   TextColumn get notes => text().nullable()();
   TextColumn get cancellationReason => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get entryDate => dateTime().nullable()();
+  DateTimeColumn get expectedExitDate => dateTime().nullable()();
   DateTimeColumn get closedAt => dateTime().nullable()();
 }
 
@@ -231,6 +233,61 @@ class AppSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+class Employees extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get role => text()();
+  TextColumn get phone => text().nullable()();
+  TextColumn get nationalId => text().nullable()();
+  IntColumn get basicSalary => integer().withDefault(const Constant(0))(); // piasters
+  TextColumn get salaryType => text().withDefault(const Constant('شهري'))(); // 'شهري', 'يومي', 'أسبوعي'
+  DateTimeColumn get hireDate => dateTime().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class EmployeeAdvances extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get employeeId => integer().references(Employees, #id)();
+  IntColumn get amount => integer()(); // piasters
+  DateTimeColumn get date => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get paymentMethod => intEnum<PaymentMethod>().withDefault(const Constant(0))();
+  TextColumn get notes => text().nullable()();
+  BoolColumn get isDeducted => boolean().withDefault(const Constant(false))();
+  IntColumn get salaryPaymentId => integer().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class SalaryPayments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get employeeId => integer().references(Employees, #id)();
+  IntColumn get year => integer()();
+  IntColumn get month => integer()();
+  IntColumn get basicSalary => integer()(); // piasters
+  IntColumn get advancesDeducted => integer().withDefault(const Constant(0))(); // piasters
+  IntColumn get bonusAmount => integer().withDefault(const Constant(0))(); // piasters
+  IntColumn get penaltyAmount => integer().withDefault(const Constant(0))(); // piasters
+  IntColumn get netPaid => integer()(); // piasters
+  DateTimeColumn get paymentDate => dateTime().withDefault(currentDateAndTime)();
+  IntColumn get paymentMethod => intEnum<PaymentMethod>().withDefault(const Constant(0))();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class Expenses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get category => text()();
+  IntColumn get amount => integer()(); // piasters
+  DateTimeColumn get expenseDate => dateTime()();
+  TextColumn get description => text()();
+  TextColumn get paidTo => text().nullable()();
+  IntColumn get paymentMethod => intEnum<PaymentMethod>().withDefault(const Constant(0))();
+  TextColumn get receiptNumber => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 // ── Database Class ─────────────────────────────────────────────────────
 
 @DriftDatabase(tables: [
@@ -251,16 +308,35 @@ class AppSettings extends Table {
   StockCounts,
   StockCountLines,
   AppSettings,
+  Employees,
+  EmployeeAdvances,
+  SalaryPayments,
+  Expenses,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
+      onCreate: (Migrator m) async {
+        await m.createAll();
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          await m.createTable(employees);
+          await m.createTable(employeeAdvances);
+          await m.createTable(salaryPayments);
+          await m.createTable(expenses);
+        }
+        if (from < 3) {
+          await m.addColumn(workOrders, workOrders.entryDate);
+          await m.addColumn(workOrders, workOrders.expectedExitDate);
+        }
+      },
       beforeOpen: (OpeningDetails details) async {
         // Enforce foreign keys.
         await customStatement('PRAGMA foreign_keys = ON;');
@@ -345,8 +421,20 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Backs up the SQLite database using SQLite's online backup API (VACUUM INTO).
+  ///
+  /// The destination file must not already exist; this method deletes it first
+  /// so a user-chosen overwrite path still succeeds.
   Future<void> backupTo(String destinationPath) async {
     await customStatement('VACUUM INTO ?', [destinationPath]);
+  }
+
+  /// Runs `PRAGMA integrity_check` and returns the engine result (`ok` when healthy).
+  Future<String> integrityCheck() async {
+    final rows = await customSelect('PRAGMA integrity_check').get();
+    if (rows.isEmpty) {
+      return 'ok';
+    }
+    return rows.map((row) => row.data.values.first.toString()).join('\n');
   }
 }
 

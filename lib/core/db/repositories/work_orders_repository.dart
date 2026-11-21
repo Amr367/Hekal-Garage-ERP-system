@@ -19,6 +19,8 @@ abstract interface class WorkOrdersRepository {
 
   Future<WorkOrderWithDetails> getWorkOrderById(int id);
 
+  Future<WorkOrderWithDetails?> getLastWorkOrderForCustomer(int customerId, {int? excludeWorkOrderId});
+
   Future<WorkOrderWithDetails> createWorkOrder({
     required int customerId,
     required int vehicleId,
@@ -26,6 +28,8 @@ abstract interface class WorkOrdersRepository {
     String? complaint,
     String? mechanicName,
     String? notes,
+    DateTime? entryDate,
+    DateTime? expectedExitDate,
     List<WorkOrderLineItem> lines = const [],
   });
 
@@ -35,6 +39,8 @@ abstract interface class WorkOrdersRepository {
     String? complaint,
     String? mechanicName,
     String? notes,
+    DateTime? entryDate,
+    DateTime? expectedExitDate,
     List<WorkOrderLineItem>? lines,
   });
 
@@ -104,6 +110,7 @@ class DriftWorkOrdersRepository implements WorkOrdersRepository {
               _db.customers.phone.like('%$trimmed%') |
               _db.vehicles.plateNumber.like('%$trimmed%') |
               _db.vehicles.plateNumber.like('%$normalizedPlate%') |
+              _db.workOrders.mechanicName.like('%$trimmed%') |
               (asInt != null ? _db.workOrders.orderNumber.equals(asInt) : const Constant(false)),
         );
       }
@@ -241,6 +248,8 @@ class DriftWorkOrdersRepository implements WorkOrdersRepository {
     String? complaint,
     String? mechanicName,
     String? notes,
+    DateTime? entryDate,
+    DateTime? expectedExitDate,
     List<WorkOrderLineItem> lines = const [],
   }) async {
     return _db.transaction(() async {
@@ -258,6 +267,9 @@ class DriftWorkOrdersRepository implements WorkOrdersRepository {
       // Generate next sequential order number (Rule R6)
       final nextOrderNumber = await _db.nextWorkOrderNumber();
 
+      final now = DateTime.now();
+      final effectiveEntry = entryDate ?? now;
+
       final workOrderId = await _db.into(_db.workOrders).insert(
         WorkOrdersCompanion(
           orderNumber: Value(nextOrderNumber),
@@ -268,7 +280,9 @@ class DriftWorkOrdersRepository implements WorkOrdersRepository {
           complaint: Value(complaint),
           mechanicName: Value(mechanicName),
           notes: Value(notes),
-          createdAt: Value(DateTime.now()),
+          createdAt: Value(now),
+          entryDate: Value(effectiveEntry),
+          expectedExitDate: Value(expectedExitDate),
         ),
       );
 
@@ -306,6 +320,8 @@ class DriftWorkOrdersRepository implements WorkOrdersRepository {
     String? complaint,
     String? mechanicName,
     String? notes,
+    DateTime? entryDate,
+    DateTime? expectedExitDate,
     List<WorkOrderLineItem>? lines,
   }) async {
     return _db.transaction(() async {
@@ -330,6 +346,8 @@ class DriftWorkOrdersRepository implements WorkOrdersRepository {
           complaint: Value(complaint),
           mechanicName: Value(mechanicName),
           notes: Value(notes),
+          entryDate: entryDate != null ? Value(entryDate) : const Value.absent(),
+          expectedExitDate: Value(expectedExitDate),
         ),
       );
 
@@ -593,5 +611,24 @@ class DriftWorkOrdersRepository implements WorkOrdersRepository {
       todayOrdersCount: todayCount,
       estimatedOpenValuePiasters: openValuePiasters,
     );
+  }
+
+  @override
+  Future<WorkOrderWithDetails?> getLastWorkOrderForCustomer(int customerId, {int? excludeWorkOrderId}) async {
+    final query = _db.select(_db.workOrders)
+      ..where((t) => t.customerId.equals(customerId));
+    if (excludeWorkOrderId != null) {
+      query.where((t) => t.id.equals(excludeWorkOrderId).not());
+    }
+    query
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+      ])
+      ..limit(1);
+
+    final row = await query.getSingleOrNull();
+    if (row == null) return null;
+    return getWorkOrderById(row.id);
   }
 }

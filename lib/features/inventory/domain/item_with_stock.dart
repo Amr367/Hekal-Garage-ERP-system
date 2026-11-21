@@ -1,5 +1,6 @@
 import '../../../core/db/database.dart';
 import '../../../core/money/money.dart';
+import '../../../core/utils/formatters.dart';
 
 /// Item joined with category name and computed stock on hand.
 class ItemWithStock {
@@ -12,6 +13,16 @@ class ItemWithStock {
   final Item item;
   final String categoryName;
   final double stockOnHand;
+
+  int get id => item.id;
+  String get name => item.name;
+  String? get sku => item.sku;
+  String? get barcode => item.barcode;
+  String get unit => item.unit;
+  int get costPrice => item.costPrice;
+  int get salePrice => item.salePrice;
+  bool get isActive => item.isActive;
+  String get formattedStock => Formatters.formatQty(stockOnHand);
 
   bool get isOutOfStock => stockOnHand <= 0;
   bool get isLowStock => !isOutOfStock && item.minQuantity > 0 && stockOnHand <= item.minQuantity;

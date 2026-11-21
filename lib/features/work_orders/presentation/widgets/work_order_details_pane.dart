@@ -4,16 +4,19 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 
 import '../../../../core/db/database.dart';
+import '../../../../core/db/providers.dart';
 import '../../../../core/strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/confirm_dialog.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../invoices/presentation/widgets/invoice_preview_dialog.dart';
 import '../../../settings/presentation/settings_controller.dart';
 import '../../domain/work_order_with_details.dart';
 import '../printing/job_card_builder.dart';
 import '../work_orders_controller.dart';
 import 'change_status_dialog.dart';
 import 'deliver_work_order_dialog.dart';
+import 'job_card_preview_dialog.dart';
 import 'work_order_form_dialog.dart';
 
 /// Desktop right-side master-detail pane for inspecting and managing a work order.
@@ -58,6 +61,15 @@ class WorkOrderDetailsPane extends ConsumerWidget {
     }
   }
 
+  Future<void> _previewJobCard(BuildContext context, WidgetRef ref) async {
+    final profile = ref.read(garageProfileProvider).value;
+    await JobCardPreviewDialog.show(
+      context,
+      order: order,
+      garageProfile: profile,
+    );
+  }
+
   Future<void> _printJobCard(BuildContext context, WidgetRef ref) async {
     try {
       final profile = ref.read(garageProfileProvider).value;
@@ -92,6 +104,94 @@ class WorkOrderDetailsPane extends ConsumerWidget {
       } catch (e) {
         if (context.mounted) {
           AppSnackbar.showError(context, e.toString());
+        }
+      }
+    }
+  }
+
+  Future<void> _previewInvoice(BuildContext context, WidgetRef ref) async {
+    if (order.invoice == null) return;
+    try {
+      final invoicesRepo = ref.read(invoicesRepositoryProvider);
+      final invoice = await invoicesRepo.getById(order.invoice!.id);
+      if (invoice != null && context.mounted) {
+        InvoicePreviewDialog.show(context, invoice: invoice);
+      } else if (context.mounted) {
+        AppSnackbar.showError(context, 'لم يتم العثور على سجل الفاتورة.');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppSnackbar.showError(context, 'تعذر تحميل بيانات الفاتورة: $e');
+      }
+    }
+  }
+
+  Future<void> _editDiagnosis(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(text: order.workOrder.notes ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.assignment_outlined, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('تسجيل / تعديل التشخيص الفني (يدوي)'),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'اكتب هنا تقرير الفحص والتشخيص الفني الذي سجله الفني بعد فحص السيارة:',
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: controller,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'تقرير الفحص والتشخيص الفني',
+                    hintText: 'اكتب تقرير التشخيص هنا...',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            icon: const Icon(Icons.check, size: 16),
+            label: const Text('حفظ التشخيص'),
+          ),
+        ],
+      ),
+    );
+
+    if (saved == true && context.mounted) {
+      try {
+        await ref.read(workOrdersActionsControllerProvider).updateWorkOrder(
+              id: order.id,
+              notes: controller.text.trim().isEmpty ? null : controller.text.trim(),
+            );
+        if (context.mounted) {
+          AppSnackbar.showSuccess(context, 'تم حفظ التشخيص الفني بنجاح');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          AppSnackbar.showError(context, 'تعذر حفظ التشخيص: $e');
         }
       }
     }
@@ -196,7 +296,30 @@ class WorkOrderDetailsPane extends ConsumerWidget {
                     ),
                   ),
 
-                // Print Job Card
+                // Preview Invoice (if issued)
+                if (order.hasInvoice && order.invoice != null)
+                  FilledButton.tonalIcon(
+                    onPressed: () => _previewInvoice(context, ref),
+                    icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                    label: const Text('معاينة الفاتورة'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.successContainer,
+                      foregroundColor: AppColors.success,
+                    ),
+                  ),
+
+                // Preview & Print Job Card
+                FilledButton.tonalIcon(
+                  onPressed: () => _previewJobCard(context, ref),
+                  icon: const Icon(Icons.visibility_outlined, size: 16),
+                  label: const Text('معاينة كارت أمر الشغل'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primaryContainer,
+                    foregroundColor: AppColors.primary,
+                  ),
+                ),
+
+                // Direct Print Job Card
                 OutlinedButton.icon(
                   onPressed: () => _printJobCard(context, ref),
                   icon: const Icon(Icons.print_outlined, size: 16),
@@ -239,6 +362,66 @@ class WorkOrderDetailsPane extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  // Schedule & Dates Box
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.schedule_outlined, color: AppColors.primary, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Wrap(
+                            spacing: 24,
+                            runSpacing: 6,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('تاريخ دخول السيارة: ', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                  Text(
+                                    order.formattedEntryDate,
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('ميعاد الخروج المتوقع: ', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                  Text(
+                                    order.formattedExpectedExitDate,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: order.expectedExitDate != null ? AppColors.primary : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (order.isDelivered && order.actualExitDate != null)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text('تاريخ الخروج الفعلي: ', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                    Text(
+                                      order.formattedActualExitDate,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.success),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   // Customer & Vehicle Row
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +469,7 @@ class WorkOrderDetailsPane extends ConsumerWidget {
                     children: <Widget>[
                       if (order.workOrder.mechanicName != null)
                         _InfoRow(
-                          label: 'الفني المسؤول:',
+                          label: 'الموظف المستلم:',
                           value: order.workOrder.mechanicName!,
                           isBold: true,
                         ),
@@ -300,18 +483,62 @@ class WorkOrderDetailsPane extends ConsumerWidget {
                         order.workOrder.complaint ?? 'صيانة دورية وفحص عام',
                         style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
                       ),
-                      if (order.workOrder.notes != null && order.workOrder.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'تقرير الفحص والتشخيص الفني:',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                          ),
+                          InkWell(
+                            onTap: () => _editDiagnosis(context, ref),
+                            borderRadius: BorderRadius.circular(4),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    order.workOrder.notes?.trim().isNotEmpty == true
+                                        ? Icons.edit_outlined
+                                        : Icons.add_circle_outline,
+                                    size: 14,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    order.workOrder.notes?.trim().isNotEmpty == true
+                                        ? 'تعديل التشخيص'
+                                        : 'تسجيل التشخيص الفني',
+                                    style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      if (order.workOrder.notes?.trim().isNotEmpty == true)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(
+                            order.workOrder.notes!,
+                            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, height: 1.4),
+                          ),
+                        )
+                      else
                         const Text(
-                          'ملاحظات الفحص والتشخيص الأولي:',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                          'لم يتم إدخال تشخيص بعد (يُكتب يدوياً بالقلم على كارت أمر الشغل المطبوع)',
+                          style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppColors.textSecondary),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          order.workOrder.notes!,
-                          style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                        ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 14),

@@ -26,6 +26,9 @@ class _ProfileSettingsCardState extends ConsumerState<ProfileSettingsCard> {
   late final TextEditingController _taxNumberController;
   late final TextEditingController _commercialRegController;
   late final TextEditingController _footerController;
+  late final TextEditingController _summaryLeftController;
+  late final TextEditingController _summaryRightController;
+  late final TextEditingController _disclaimerController;
 
   bool _initialized = false;
 
@@ -40,6 +43,9 @@ class _ProfileSettingsCardState extends ConsumerState<ProfileSettingsCard> {
     _taxNumberController = TextEditingController();
     _commercialRegController = TextEditingController();
     _footerController = TextEditingController();
+    _summaryLeftController = TextEditingController();
+    _summaryRightController = TextEditingController();
+    _disclaimerController = TextEditingController();
   }
 
   @override
@@ -52,6 +58,9 @@ class _ProfileSettingsCardState extends ConsumerState<ProfileSettingsCard> {
     _taxNumberController.dispose();
     _commercialRegController.dispose();
     _footerController.dispose();
+    _summaryLeftController.dispose();
+    _summaryRightController.dispose();
+    _disclaimerController.dispose();
     super.dispose();
   }
 
@@ -65,6 +74,9 @@ class _ProfileSettingsCardState extends ConsumerState<ProfileSettingsCard> {
       _taxNumberController.text = profile.taxNumber;
       _commercialRegController.text = profile.commercialReg;
       _footerController.text = profile.invoiceFooterNote;
+      _summaryLeftController.text = profile.customSummaryBarLeft ?? '';
+      _summaryRightController.text = profile.customSummaryBarRight ?? '';
+      _disclaimerController.text = profile.customDisclaimer ?? '';
       _initialized = true;
     }
   }
@@ -84,6 +96,9 @@ class _ProfileSettingsCardState extends ConsumerState<ProfileSettingsCard> {
       taxNumber: _taxNumberController.text.trim(),
       commercialReg: _commercialRegController.text.trim(),
       invoiceFooterNote: _footerController.text.trim(),
+      customSummaryBarLeft: _summaryLeftController.text.trim(),
+      customSummaryBarRight: _summaryRightController.text.trim(),
+      customDisclaimer: _disclaimerController.text.trim(),
     );
 
     await ref.read(garageProfileProvider.notifier).saveProfile(updated);
@@ -321,6 +336,16 @@ class _ProfileSettingsCardState extends ConsumerState<ProfileSettingsCard> {
                     controller: _footerController,
                     maxLines: 2,
                     decoration: const InputDecoration(labelText: AppStrings.fieldInvoiceFooter),
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextFormField(
+                    controller: _disclaimerController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'ملاحظة وإقرار الاستلام أسفل أمر الشغل (النص الأحمر)',
+                      hintText: 'اتركه فارغاً للاحتفاظ بالنص الافتراضي للنظام',
+                    ),
                   ),
                 ],
               ),

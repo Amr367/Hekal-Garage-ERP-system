@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/customers/customers_page.dart';
 import '../../features/dashboard/dashboard_page.dart';
 import '../../features/dev/print_test_page.dart';
+import '../../features/employees/employees_page.dart';
+import '../../features/expenses/expenses_page.dart';
 import '../../features/inventory/inventory_page.dart';
 import '../../features/invoices/invoices_page.dart';
 import '../../features/purchases/purchases_page.dart';
@@ -77,6 +80,18 @@ final GoRouter appRouter = GoRouter(
           ),
         ),
         GoRoute(
+          path: '/expenses',
+          pageBuilder: (BuildContext context, GoRouterState state) => const NoTransitionPage<void>(
+            child: ExpensesPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/employees',
+          pageBuilder: (BuildContext context, GoRouterState state) => const NoTransitionPage<void>(
+            child: EmployeesPage(),
+          ),
+        ),
+        GoRoute(
           path: '/reports',
           pageBuilder: (BuildContext context, GoRouterState state) => const NoTransitionPage<void>(
             child: ReportsPage(),
@@ -90,6 +105,7 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: '/dev/print-test',
+          redirect: (_, _) => kDebugMode ? null : '/dashboard',
           pageBuilder: (BuildContext context, GoRouterState state) => const NoTransitionPage<void>(
             child: PrintTestPage(),
           ),

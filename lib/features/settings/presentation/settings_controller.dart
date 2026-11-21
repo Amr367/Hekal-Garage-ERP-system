@@ -8,6 +8,7 @@ import 'package:printing/printing.dart';
 
 import '../../../core/db/connection/connection.dart';
 import '../../../core/db/providers.dart';
+import '../../../core/db/services/backup_service.dart';
 import '../../../core/strings.dart';
 import '../data/pin_auth_service.dart';
 import '../domain/garage_profile.dart';
@@ -36,8 +37,16 @@ class GarageProfileNotifier extends AsyncNotifier<GarageProfile> {
   FutureOr<GarageProfile> build() async {
     final repo = ref.watch(settingsRepositoryProvider);
 
-    final name = await repo.getWithDefault(keyName, AppStrings.garageNameDefault);
-    final subtitle = await repo.getWithDefault(keySubtitle, AppStrings.garageSubtitleDefault);
+    var name = await repo.getWithDefault(keyName, AppStrings.garageNameDefault);
+    var subtitle = await repo.getWithDefault(keySubtitle, AppStrings.garageSubtitleDefault);
+    if (name == 'مركز الصيانة التخصصي للسيارات') {
+      name = AppStrings.garageNameDefault;
+      await repo.set(keyName, name);
+    }
+    if (subtitle == 'إدارة الصيانة والمخازن وقطع الغيار') {
+      subtitle = AppStrings.garageSubtitleDefault;
+      await repo.set(keySubtitle, subtitle);
+    }
     final phone = await repo.getWithDefault(keyPhone, '');
     final phone2 = await repo.getWithDefault(keyPhone2, '');
     final address = await repo.getWithDefault(keyAddress, '');
@@ -267,4 +276,9 @@ final databaseInfoProvider = FutureProvider<DatabaseInfo>((ref) async {
   }
 
   return DatabaseInfo(path: dbPath, sizeFormatted: sizeFormatted);
+});
+
+final recentBackupsProvider = FutureProvider<List<File>>((ref) async {
+  final db = ref.watch(appDatabaseProvider);
+  return BackupService(db).listAutoBackups();
 });

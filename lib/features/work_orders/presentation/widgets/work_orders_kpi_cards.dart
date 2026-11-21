@@ -20,55 +20,56 @@ class WorkOrdersKpiCards extends ConsumerWidget {
       ),
       error: (err, stack) => const SizedBox.shrink(),
       data: (summary) {
-        return Row(
-          children: <Widget>[
-            // Card 1: In Progress
-            Expanded(
-              child: _MetricCard(
-                title: AppStrings.kpiInProgressOrders,
-                value: '${summary.inProgressOrdersCount}',
-                subtitle: 'أوامر جاري تنفيذها في الورشة',
-                icon: Icons.engineering_rounded,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 14),
+        final cards = <Widget>[
+          _MetricCard(
+            title: AppStrings.kpiInProgressOrders,
+            value: '${summary.inProgressOrdersCount}',
+            subtitle: 'أوامر جاري تنفيذها في الورشة',
+            icon: Icons.engineering_rounded,
+            color: AppColors.primary,
+          ),
+          _MetricCard(
+            title: AppStrings.kpiReadyOrders,
+            value: '${summary.readyOrdersCount}',
+            subtitle: 'سيارات تم إصلاحها وجاهزة',
+            icon: Icons.check_circle_outline_rounded,
+            color: AppColors.success,
+          ),
+          _MetricCard(
+            title: AppStrings.kpiTodayOrders,
+            value: '${summary.todayOrdersCount}',
+            subtitle: 'أوامر جديدة دخلت اليوم',
+            icon: Icons.today_rounded,
+            color: const Color(0xFF0288D1),
+          ),
+          _MetricCard(
+            title: AppStrings.kpiEstimatedOpenValue,
+            value: summary.formattedEstimatedOpenValue,
+            subtitle: 'إجمالي مصنعيات وقطع الأوامر المفتوحة',
+            icon: Icons.monetization_on_outlined,
+            color: AppColors.warning,
+          ),
+        ];
 
-            // Card 2: Ready for delivery
-            Expanded(
-              child: _MetricCard(
-                title: AppStrings.kpiReadyOrders,
-                value: '${summary.readyOrdersCount}',
-                subtitle: 'سيارات تم إصلاحها وجاهزة',
-                icon: Icons.check_circle_outline_rounded,
-                color: AppColors.success,
-              ),
-            ),
-            const SizedBox(width: 14),
-
-            // Card 3: Received Today
-            Expanded(
-              child: _MetricCard(
-                title: AppStrings.kpiTodayOrders,
-                value: '${summary.todayOrdersCount}',
-                subtitle: 'أوامر جديدة دخلت اليوم',
-                icon: Icons.today_rounded,
-                color: const Color(0xFF0288D1),
-              ),
-            ),
-            const SizedBox(width: 14),
-
-            // Card 4: Estimated Open Orders Value
-            Expanded(
-              child: _MetricCard(
-                title: AppStrings.kpiEstimatedOpenValue,
-                value: summary.formattedEstimatedOpenValue,
-                subtitle: 'إجمالي مصنعيات وقطع الأوامر المفتوحة',
-                icon: Icons.monetization_on_outlined,
-                color: AppColors.warning,
-              ),
-            ),
-          ],
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 900) {
+              final double cardW = (constraints.maxWidth - 14) / 2;
+              return Wrap(
+                spacing: 14,
+                runSpacing: 14,
+                children: cards.map((c) => SizedBox(width: cardW, child: c)).toList(),
+              );
+            }
+            return Row(
+              children: [
+                for (int i = 0; i < cards.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 14),
+                  Expanded(child: cards[i]),
+                ],
+              ],
+            );
+          },
         );
       },
     );

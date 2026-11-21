@@ -1,17 +1,50 @@
-# garage_erp
+# نظام مركز هيكل
 
-A new Flutter project.
+تطبيق ويندوز أوفلاين بالكامل لإدارة مركز صيانة سيارات ومخزن قطع غيار في مصر: أوامر الشغل، الفواتير، العملاء، المخزن، المشتريات، الجرد، والتقارير.
 
-## Getting Started
+لا يتصل بالإنترنت، ولا يرسل بيانات، ولا يحمّل خطوطاً من الشبكة. كل البيانات على الجهاز في ملف SQLite.
 
-This project is a starting point for a Flutter application.
+## التشغيل من المصدر
 
-A few resources to get you started if this is your first Flutter project:
+يتطلب Flutter 3.47+ على ويندوز مع Visual Studio Build Tools (MSVC + Windows SDK).
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+cd D:\Hekal
+flutter pub get
+flutter test
+flutter run -d windows
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+بناء نسخة تسليم:
+
+```powershell
+flutter build windows --release
+```
+
+الملف التنفيذي بعد البناء:
+
+`build\windows\x64\runner\Release\garage_erp.exe`
+
+## أين تُحفظ البيانات
+
+- قاعدة البيانات: مجلد دعم التطبيق (`garage.sqlite`)
+- الشعار المنسوخ محلياً: نفس المجلد
+- النسخ الاحتياطي التلقائي: مجلد `backups` بجانبها
+
+من الإعدادات → قاعدة البيانات والصيانة يمكن فتح المجلد، إنشاء نسخة يدوية، استعادة نسخة، وفحص سلامة الملف.
+
+عند إغلاق البرنامج تُنشأ نسخة تلقائية ويُحتفظ بآخر 14 نسخة.
+
+## التسليم للورشة
+
+1. انسخ مجلد `Release` كاملاً (وليس الـ exe وحده).
+2. اضبط بيانات المركز والشعار والطابعات من شاشة الإعدادات.
+3. عيّن رمز PIN لحماية الخصم وإظهار التكلفة وتعديل المخزن وإلغاء الفواتير.
+4. حمّل البيانات الأولية (أقسام وخدمات) إن كانت قاعدة البيانات فارغة.
+5. درّب الاستقبال على: أمر شغل ← كارت الورشة ← تسليم وفاتورة ← تحصيل.
+
+## النسخ الاحتياطي
+
+- نسخة يدوية: ملف `.sqlite` يُحفظ حيث يختار المستخدم (يفضّل فلاشة أو قرص خارجي).
+- استعادة: تختار الملف ثم يُغلق البرنامج؛ إعادة الفتح تحمّل البيانات المستعادة.
+- قبل الاستعادة يحاول النظام أخذ نسخة أمان من الملف الحالي.

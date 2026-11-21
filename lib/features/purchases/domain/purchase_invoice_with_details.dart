@@ -54,9 +54,9 @@ class PurchaseInvoiceWithDetails {
     }
   }
 
-  String get formattedTotal => MoneyUtils.formatPiasters(totalAmountPiasters);
-  String get formattedPaid => MoneyUtils.formatPiasters(paidAmountPiasters);
-  String get formattedRemaining => MoneyUtils.formatPiasters(remainingAmountPiasters);
+  String get formattedTotal => MoneyUtils.format(totalAmountPiasters, withCurrency: true);
+  String get formattedPaid => MoneyUtils.format(paidAmountPiasters, withCurrency: true);
+  String get formattedRemaining => MoneyUtils.format(remainingAmountPiasters, withCurrency: true);
 
   String get formattedDate {
     return '${invoiceDate.year}/${invoiceDate.month.toString().padLeft(2, '0')}/${invoiceDate.day.toString().padLeft(2, '0')}';

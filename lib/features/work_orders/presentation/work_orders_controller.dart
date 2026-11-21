@@ -93,6 +93,8 @@ class WorkOrdersActionsController {
     String? complaint,
     String? mechanicName,
     String? notes,
+    DateTime? entryDate,
+    DateTime? expectedExitDate,
     List<WorkOrderLineItem> lines = const [],
   }) async {
     final repo = _ref.read(workOrdersRepositoryProvider);
@@ -103,6 +105,8 @@ class WorkOrdersActionsController {
       complaint: complaint,
       mechanicName: mechanicName,
       notes: notes,
+      entryDate: entryDate,
+      expectedExitDate: expectedExitDate,
       lines: lines,
     );
 
@@ -119,6 +123,8 @@ class WorkOrdersActionsController {
     String? complaint,
     String? mechanicName,
     String? notes,
+    DateTime? entryDate,
+    DateTime? expectedExitDate,
     List<WorkOrderLineItem>? lines,
   }) async {
     final repo = _ref.read(workOrdersRepositoryProvider);
@@ -128,6 +134,8 @@ class WorkOrdersActionsController {
       complaint: complaint,
       mechanicName: mechanicName,
       notes: notes,
+      entryDate: entryDate,
+      expectedExitDate: expectedExitDate,
       lines: lines,
     );
 

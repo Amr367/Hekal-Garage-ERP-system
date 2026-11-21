@@ -1,102 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_scaffold.dart';
+import 'presentation/reports_controller.dart';
+import 'presentation/widgets/debts_report_tab.dart';
+import 'presentation/widgets/inventory_report_tab.dart';
+import 'presentation/widgets/profit_report_tab.dart';
+import 'presentation/widgets/reports_header_toolbar.dart';
+import 'presentation/widgets/sales_report_tab.dart';
 
-/// Financial and operational reports page placeholder.
-class ReportsPage extends StatelessWidget {
+/// Financial and operational reports page for Egyptian automotive garage ERP.
+class ReportsPage extends ConsumerWidget {
   const ReportsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeTab = ref.watch(reportsSelectedTabProvider);
+
     return AppScaffold(
       title: AppStrings.reportsTitle,
       subtitle: AppStrings.reportsSubtitle,
-      scrollable: true,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          // ── Filter Controls Card ──────────────────────────────────────────
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: <Widget>[
-                  const Icon(Icons.date_range, color: AppColors.primary),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'الفترة الزمنية: الشهر الحالي',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          // ── Date Range & Export Toolbar ───────────────────────────────────
+          const ReportsHeaderToolbar(),
+
+          const SizedBox(height: 16),
+
+          // ── Section Tabs ──────────────────────────────────────────────────
+          Container(
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.border)),
+            ),
+            child: Row(
+              children: <Widget>[
+                  _ReportTabItem(
+                    title: 'تقرير المبيعات والإيرادات',
+                    icon: Icons.payments_outlined,
+                    isSelected: activeTab == 0,
+                    onTap: () => ref
+                        .read(reportsSelectedTabProvider.notifier)
+                        .selectTab(0),
                   ),
-                  const Spacer(),
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.filter_list),
-                    label: const Text(AppStrings.filter),
+                  const SizedBox(width: 8),
+                  _ReportTabItem(
+                    title: 'تقرير الأرباح وهوامش الربح',
+                    icon: Icons.trending_up,
+                    isSelected: activeTab == 1,
+                    onTap: () => ref
+                        .read(reportsSelectedTabProvider.notifier)
+                        .selectTab(1),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.file_download_outlined),
-                    label: const Text(AppStrings.exportExcel),
+                  const SizedBox(width: 8),
+                  _ReportTabItem(
+                    title: 'حركة المخزون والركود',
+                    icon: Icons.inventory_outlined,
+                    isSelected: activeTab == 2,
+                    onTap: () => ref
+                        .read(reportsSelectedTabProvider.notifier)
+                        .selectTab(2),
+                  ),
+                  const SizedBox(width: 8),
+                  _ReportTabItem(
+                    title: 'مديونيات العملاء والموردين',
+                    icon: Icons.account_balance_outlined,
+                    isSelected: activeTab == 3,
+                    onTap: () => ref
+                        .read(reportsSelectedTabProvider.notifier)
+                        .selectTab(3),
                   ),
                 ],
               ),
             ),
-          ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // ── Report Sections Grid ──────────────────────────────────────────
-          LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final double cardWidth = (constraints.maxWidth - 24) / 2;
-              return Wrap(
-                spacing: 24,
-                runSpacing: 24,
-                children: <Widget>[
-                  SizedBox(
-                    width: cardWidth < 340 ? constraints.maxWidth : cardWidth,
-                    child: _ReportCard(
-                      title: 'تقرير المبيعات والإيرادات',
-                      subtitle: 'مبيعات قطع الغيار والمصنعيات وصافي الدخل اليومي والشهري',
-                      icon: Icons.payments_outlined,
-                      color: AppColors.success,
-                      onTap: () {},
-                    ),
-                  ),
-                  SizedBox(
-                    width: cardWidth < 340 ? constraints.maxWidth : cardWidth,
-                    child: _ReportCard(
-                      title: 'تقرير حركة المخزن والركود',
-                      subtitle: 'الأصناف الأكثر حركة، الأصناف الراكدة، وقيمة المخزون الحالي',
-                      icon: Icons.inventory_outlined,
-                      color: AppColors.primary,
-                      onTap: () {},
-                    ),
-                  ),
-                  SizedBox(
-                    width: cardWidth < 340 ? constraints.maxWidth : cardWidth,
-                    child: _ReportCard(
-                      title: 'تقرير حسابات العملاء والديون',
-                      subtitle: 'أرصدة العملاء والديون المتأخرة والتحصيلات النقدية والبنكية',
-                      icon: Icons.people_outline,
-                      color: AppColors.danger,
-                      onTap: () {},
-                    ),
-                  ),
-                  SizedBox(
-                    width: cardWidth < 340 ? constraints.maxWidth : cardWidth,
-                    child: _ReportCard(
-                      title: 'تقرير أرباح العمليات وصافي الربح',
-                      subtitle: 'تحليل هامش الربح لقطع الغيار ونسب أرباح الصيانة والتكاليف',
-                      icon: Icons.account_balance_outlined,
-                      color: AppColors.secondary,
-                      onTap: () {},
-                    ),
-                  ),
-                ],
-              );
+          // ── Active Report View ────────────────────────────────────────────
+          Expanded(
+            child: switch (activeTab) {
+              0 => const SalesReportTab(),
+              1 => const ProfitReportTab(),
+              2 => const InventoryReportTab(),
+              3 => const DebtsReportTab(),
+              _ => const SalesReportTab(),
             },
           ),
         ],
@@ -105,67 +94,60 @@ class ReportsPage extends StatelessWidget {
   }
 }
 
-class _ReportCard extends StatelessWidget {
-  const _ReportCard({
+class _ReportTabItem extends StatelessWidget {
+  const _ReportTabItem({
     required this.title,
-    required this.subtitle,
     required this.icon,
-    required this.color,
+    required this.isSelected,
     required this.onTap,
   });
 
   final String title;
-  final String subtitle;
   final IconData icon;
-  final Color color;
+  final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isSelected ? AppColors.primary : Colors.transparent,
+                width: 3,
+              ),
+            ),
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.05)
+                : Colors.transparent,
+          ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 26),
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color:
+                        isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.border),
             ],
           ),
         ),

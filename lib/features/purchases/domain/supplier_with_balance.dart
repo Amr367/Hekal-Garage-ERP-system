@@ -27,11 +27,11 @@ class SupplierWithBalance {
   DateTime get createdAt => supplier.createdAt;
 
   String get formattedTotalPurchases =>
-      MoneyUtils.formatPiasters(totalPurchasesPiasters);
+      MoneyUtils.format(totalPurchasesPiasters, withCurrency: true);
   String get formattedTotalPaid =>
-      MoneyUtils.formatPiasters(totalPaidPiasters);
+      MoneyUtils.format(totalPaidPiasters, withCurrency: true);
   String get formattedBalanceDue =>
-      MoneyUtils.formatPiasters(balanceDuePiasters);
+      MoneyUtils.format(balanceDuePiasters, withCurrency: true);
 
   bool get hasDebt => balanceDuePiasters > 0;
 

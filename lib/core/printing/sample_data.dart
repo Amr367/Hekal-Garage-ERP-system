@@ -5,7 +5,7 @@
 /// words, parentheses inside RTL, and plate-number formatting.
 abstract final class PrintSampleData {
   // ── Shop header ────────────────────────────────────────────────────
-  static const String shopName = 'مركز الحكل لصيانة السيارات';
+  static const String shopName = 'مركز هيكل';
   static const String shopAddress = 'شارع الملك فيصل — الجيزة — مصر';
   static const String shopPhone1 = '01012345678';
   static const String shopPhone2 = '01198765432';

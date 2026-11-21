@@ -56,3 +56,10 @@ app.*.map.json
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
+
+# Release packages & preview exports
+*.zip
+Hekal_Garage_Package/
+*.pdf
+/deployment/App/
+

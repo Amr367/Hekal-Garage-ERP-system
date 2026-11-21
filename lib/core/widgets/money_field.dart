@@ -61,7 +61,11 @@ class _MoneyFieldState extends State<MoneyField> {
         widget.controller == null) {
       final currentPiasters = _parseCurrent();
       if (currentPiasters != widget.initialPiasters) {
-        _controller.text = MoneyUtils.formatPoundsOnly(widget.initialPiasters!);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _controller.text = MoneyUtils.formatPoundsOnly(widget.initialPiasters!);
+          }
+        });
       }
     }
   }

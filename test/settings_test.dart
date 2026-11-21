@@ -244,6 +244,10 @@ void main() {
       expect(find.text(AppStrings.databasePathLabel), findsOneWidget);
       expect(find.text(AppStrings.openDatabaseFolder), findsOneWidget);
       expect(find.text(AppStrings.loadSeedData), findsOneWidget);
+      expect(find.text(AppStrings.backupNowButton), findsOneWidget);
+      expect(find.text(AppStrings.restoreBackupButton), findsOneWidget);
+      expect(find.text(AppStrings.integrityCheckButton), findsOneWidget);
+      expect(find.text(AppStrings.startingNumbersTitle), findsOneWidget);
     });
   });
 }

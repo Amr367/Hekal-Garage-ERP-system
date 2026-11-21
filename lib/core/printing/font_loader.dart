@@ -3,14 +3,20 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/widgets.dart' as pw;
 
-/// Loads Cairo font files from assets for use in PDF generation.
+/// Loads Cairo font files and brand logo SVG bytes from assets for PDF generation.
 ///
-/// Fonts are cached in memory after the first load so subsequent
+/// Fonts and logos are cached in memory after the first load so subsequent
 /// PDF builds do not hit the asset bundle again.
 abstract final class PdfFontLoader {
   static pw.Font? _regular;
   static pw.Font? _semiBold;
   static pw.Font? _bold;
+
+  // Brand logo SVG bytes (cached)
+  static Uint8List? _logoMg;
+  static Uint8List? _logoOpel;
+  static Uint8List? _logoChevrolet;
+  static bool _isChevroletRaster = false;
 
   /// Cairo Regular (weight 400).
   static pw.Font get regular {
@@ -35,6 +41,18 @@ abstract final class PdfFontLoader {
     }
     return _bold!;
   }
+
+  /// MG logo SVG bytes (nullable — may be missing if asset not bundled).
+  static Uint8List? get logoMg => _logoMg;
+
+  /// Opel logo SVG bytes (nullable).
+  static Uint8List? get logoOpel => _logoOpel;
+
+  /// Chevrolet logo bytes (nullable - SVG preferred, raster fallback).
+  static Uint8List? get logoChevrolet => _logoChevrolet;
+
+  /// Whether Chevrolet logo is raster (JPG/PNG) rather than SVG.
+  static bool get isChevroletRaster => _isChevroletRaster;
 
   /// A [pw.ThemeData] configured for RTL Arabic with Cairo.
   static pw.ThemeData get arabicTheme {
@@ -107,5 +125,26 @@ abstract final class PdfFontLoader {
     _regular = pw.Font.ttf(regularData);
     _semiBold = pw.Font.ttf(semiBoldData);
     _bold = pw.Font.ttf(boldData);
+
+    // Load brand logos — tolerate missing files gracefully
+    _logoMg = await _loadAssetBytes('assets/logos/mg.svg');
+    _logoOpel = await _loadAssetBytes('assets/logos/opel.svg');
+    final chevSvg = await _loadAssetBytes('assets/logos/chevrolet.svg');
+    if (chevSvg != null) {
+      _logoChevrolet = chevSvg;
+      _isChevroletRaster = false;
+    } else {
+      _logoChevrolet = await _loadAssetBytes('assets/logos/chevrolet.jpg');
+      _isChevroletRaster = _logoChevrolet != null;
+    }
+  }
+
+  static Future<Uint8List?> _loadAssetBytes(String path) async {
+    try {
+      final data = await rootBundle.load(path);
+      return data.buffer.asUint8List();
+    } catch (_) {
+      return null; // Asset missing — caller falls back to text badge
+    }
   }
 }

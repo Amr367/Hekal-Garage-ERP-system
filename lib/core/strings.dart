@@ -1,9 +1,9 @@
 /// Every user-facing UI string lives here. Widgets must not hard-code Arabic.
 abstract final class AppStrings {
   // ── App & Brand ────────────────────────────────────────────────────────
-  static const String appTitle = 'نظام مركز الصيانة والمخزن';
-  static const String garageNameDefault = 'مركز الصيانة التخصصي للسيارات';
-  static const String garageSubtitleDefault = 'إدارة الصيانة والمخازن وقطع الغيار';
+  static const String appTitle = 'نظام مركز هيكل';
+  static const String garageNameDefault = 'مركز هيكل';
+  static const String garageSubtitleDefault = 'لاصلاح السيارات';
   static const String invoiceFooterNoteDefault =
       'شكراً لتعاملكم معنا. البضاعة المباعة ترد وتستبدل خلال 14 يوماً وفقاً للشروط.';
   static const String currencySymbol = 'ج.م';
@@ -19,6 +19,8 @@ abstract final class AppStrings {
   static const String navInventory = 'المخزن والأصناف';
   static const String navPurchases = 'المشتريات والموردين';
   static const String navStockCount = 'الجرد السنوي';
+  static const String navEmployees = 'الموظفين والرواتب';
+  static const String navExpenses = 'مصروفات المركز';
   static const String navReports = 'التقارير المالية';
   static const String navSettings = 'الإعدادات';
   static const String navPrintTest = 'اختبار الطباعة';
@@ -44,7 +46,7 @@ abstract final class AppStrings {
   static const String editWorkOrderButton = 'تعديل أمر الشغل';
   static const String cancelWorkOrderButton = 'إلغاء أمر الشغل';
   static const String deleteWorkOrderButton = 'حذف أمر الشغل';
-  static const String printJobCardButton = 'طباعة كارت الورشة';
+  static const String printJobCardButton = 'طباعة كارت أمر الشغل';
   static const String printReceiptButton = 'طباعة إيصال استلام';
   static const String changeStatusButton = 'تغيير حالة الأمر';
 
@@ -69,8 +71,8 @@ abstract final class AppStrings {
   static const String odometerLabel = 'عداد الكيلومتر الحالي';
   static const String complaintLabel = 'شكوى العميل / المطلوب عمله';
   static const String complaintHint = 'اكتب تفاصيل العطل أو الصيانة المطلوبة بناءً على رغبة العميل...';
-  static const String mechanicLabel = 'الفني / الميكانيكي المسؤول';
-  static const String mechanicHint = 'اسم الفني أو الأسطى المسؤول عن الصيانة';
+  static const String mechanicLabel = 'الموظف المستلم للسيارة';
+  static const String mechanicHint = 'اختر الموظف المستلم من موظفي المركز';
   static const String orderNotesLabel = 'ملاحظات الفحص والتشخيص الأولي';
   static const String cancellationReasonLabel = 'سبب إلغاء أمر الشغل';
   static const String customerVehicleRequired = 'يرجى اختيار العميل والسيارة للمتابعة';
@@ -312,6 +314,14 @@ abstract final class AppStrings {
   static const String noPurchaseLines = 'يرجى إضافة صنف واحد على الأقل للفاتورة';
   static const String purchaseDetailsTitle = 'ملف فاتورة الشراء';
   static const String selectPurchaseToView = 'اختر فاتورة شراء من القائمة لعرض تفاصيلها وبنودها';
+  static const String printPurchaseButton = 'طباعة إذن التوريد';
+  static const String purchasePreviewTitle = 'معاينة إذن التوريد / فاتورة الشراء';
+  static const String purchaseDocumentTitle = 'فاتورة توريد وشراء قطع غيار';
+  static const String purchaseInvoiceNumberPrefix = 'فاتورة توريد #';
+  static const String supplierInvoiceNumPrefix = 'رقم المورد: ';
+  static const String purchaseAccountStatus = 'الحساب وحالة السداد';
+  static const String storekeeperSignature = 'توقيع أمين المخزن / المستلم';
+  static const String supplierReceiptSignature = 'توقيع المورد / المندوب المسلّم';
 
   // Payment Status
   static const String paymentStatusPaid = 'مدفوعة بالكامل';
@@ -330,10 +340,80 @@ abstract final class AppStrings {
   static const String searchSuppliersHint = 'بحث باسم المورد أو رقم الهاتف...';
 
 
-  // ── Stock Count Placeholder ───────────────────────────────────────────
+  // ── Stock Count (Phase 9 — الجرد المخزني) ──────────────────────────────
   static const String stockCountTitle = 'الجرد السنوي والمخزني';
   static const String stockCountSubtitle = 'مطابقة المخزون الفعلي مع المسجل وحساب الفروقات';
   static const String startStockCountButton = 'بدء جرد جديد';
+
+  // Stock Count Scopes
+  static const String scopeAll = 'جرد شامل (جميع الأصناف)';
+  static const String scopeCategory = 'جرد حسب التصنيف';
+  static const String scopeRecent = 'جرد الأصناف النشطة (لها حركة مؤخراً)';
+
+  // Stock Count Statuses
+  static const String countStatusDraft = 'مسودة (قيد العد)';
+  static const String countStatusFinalized = 'معتمد ومحفوظ';
+
+  // Stock Count Form Dialog
+  static const String newStockCountTitle = 'بدء جلسة جرد جديدة';
+  static const String stockCountScopeLabel = 'نطاق الجرد';
+  static const String stockCountNotesLabel = 'ملاحظات الجرد';
+  static const String stockCountCategoryFilterLabel = 'اختر التصنيف';
+  static const String stockCountScopeRequired = 'يرجى اختيار نطاق الجرد';
+
+  // Stock Count KPI Cards
+  static const String kpiTotalCountSessions = 'إجمالي جلسات الجرد';
+  static const String kpiDraftCounts = 'مسودات قيد العد';
+  static const String kpiFinalizedCounts = 'جلسات معتمدة';
+  static const String kpiTotalDifference = 'قيمة الفروقات';
+
+  // Stock Count Details Pane
+  static const String countSessionInfo = 'بيانات جلسة الجرد';
+  static const String countNumber = 'رقم الجلسة';
+  static const String countScope = 'نطاق الجرد';
+  static const String countDate = 'تاريخ الإنشاء';
+  static const String countFinalizedDate = 'تاريخ الاعتماد';
+  static const String countItemsTotal = 'إجمالي الأصناف';
+  static const String countItemsCounted = 'أصناف تم عدها';
+  static const String countItemsRemaining = 'أصناف متبقية';
+  static const String countDifferences = 'الفروقات';
+  static const String columnItemName = 'اسم الصنف';
+  static const String columnSystemQty = 'الكمية بالنظام';
+  static const String columnCountedQty = 'الكمية الفعلية';
+  static const String columnDifference = 'الفرق';
+  static const String columnNotes = 'ملاحظات';
+  static const String notCounted = 'لم يُعد بعد';
+
+  // Stock Count Actions
+  static const String finalizeCountButton = 'اعتماد الجرد';
+  static const String deleteCountButton = 'حذف جلسة الجرد';
+  static const String editCountedQtyButton = 'تسجيل العد الفعلي';
+  static const String printCountReport = 'طباعة تقرير الجرد';
+
+  // Stock Count Dialogs
+  static const String finalizeCountTitle = 'اعتماد جلسة الجرد';
+  static const String finalizeCountMessage =
+      'سيتم تسجيل فروقات الجرد كحركات تسوية في المخزن.\n'
+      'هذا الإجراء لا يمكن التراجع عنه.\n'
+      'هل تريد المتابعة؟';
+  static const String finalizeCountConfirm = 'اعتماد وتسجيل الفروقات';
+  static const String finalizeCountCancel = 'تراجع';
+  static const String countFinalized = 'تم اعتماد جلسة الجرد وتسجيل الفروقات بنجاح';
+  static const String countDeleted = 'تم حذف جلسة الجرد';
+
+  // Stock Count Line Edit Dialog
+  static const String editCountLineTitle = 'تسجيل العد الفعلي';
+  static const String actualCountLabel = 'الكمية الفعلية بعد العد';
+  static const String lineNotesLabel = 'ملاحظات (اختياري)';
+
+  // Errors
+  static const String cannotDeleteFinalizedCount = 'لا يمكن حذف جلسة جرد معتمدة';
+  static const String cannotFinalizeTwice = 'جلسة الجرد معتمدة بالفعل';
+  static const String noItemsToCount = 'لا توجد أصناف ضمن نطاق الجرد المحدد';
+  static const String countHasUncountedItems = 'يوجد أصناف لم يتم عدها بعد. هل تريد المتابعة؟';
+
+  // Search
+  static const String stockCountSearchHint = 'بحث برقم الجلسة أو الملاحظات...';
 
   // ── Reports Placeholder ───────────────────────────────────────────────
   static const String reportsTitle = 'التقارير المالية والتحليلية';
@@ -345,9 +425,11 @@ abstract final class AppStrings {
 
   // Tab / Section headers
   static const String tabProfile = 'بيانات المركز';
+  static const String tabServices = 'دليل الخدمات والمصنعيات';
   static const String tabPrinters = 'إعدادات الطابعات';
   static const String tabSecurity = 'الأمان ورمز PIN';
   static const String tabDatabase = 'قاعدة البيانات والصيانة';
+  static const String sidebarTagline = 'مركز هيكل لاصلاح السيارات';
 
   // Garage Profile
   static const String garageProfileTitle = 'بيانات مركز الصيانة';
@@ -368,19 +450,19 @@ abstract final class AppStrings {
   static const String profileSavedSuccess = 'تم حفظ بيانات المركز بنجاح';
 
   // Printers Settings
-  static const String printersTitle = 'إعدادات الطابعات والورق';
-  static const String printersSubtitle = 'تحديد الطابعات الافتراضية للفواتير والإيصالات الحرارية';
-  static const String invoicePrinterLabel = 'طابعة فواتير A4 الافتراضية';
+  static const String printersTitle = 'إعدادات الطباعة والورق';
+  static const String printersSubtitle = 'تحديد الطابعة الافتراضية للفواتير وكروت أوامر الشغل';
+  static const String invoicePrinterLabel = 'الطابعة الافتراضية لفواتير وكروت الصيانة (A4)';
   static const String receiptPrinterLabel = 'طابعة إيصالات 80mm الافتراضية';
-  static const String defaultPaperSizeLabel = 'نوع الطباعة الافتراضي عند إصدار الفاتورة';
-  static const String paperSizeA4 = 'ورق كبير A4';
+  static const String defaultPaperSizeLabel = 'نوع الورق المعتمد';
+  static const String paperSizeA4 = 'ورق كبير A4 (المعتمد)';
   static const String paperSizeReceipt = 'إيصال حراري (80 مم)';
-  static const String autoPrintLabel = 'إرسال الفاتورة للطابعة تلقائياً فور الحفظ';
+  static const String autoPrintLabel = 'إرسال الفاتورة والمستند للطابعة تلقائياً فور الحفظ';
   static const String noPrinterSelected = 'استخدام طابعة النظام الافتراضية';
   static const String loadingPrinters = 'جاري البحث عن الطابعات المتصلة...';
   static const String testPrintA4 = 'طباعة تجريبية A4';
   static const String testPrintReceipt = 'طباعة تجريبية 80mm';
-  static const String printersSavedSuccess = 'تم حفظ إعدادات الطابعات بنجاح';
+  static const String printersSavedSuccess = 'تم حفظ إعدادات الطباعة بنجاح';
 
   // Security & PIN Settings
   static const String securityTitle = 'الأمان ورمز PIN';
@@ -418,6 +500,38 @@ abstract final class AppStrings {
   static const String loadSeedData = 'تحميل البيانات الأولية (أقسام وخدمات)';
   static const String seedDataLoadedSuccess = 'تم تحميل البيانات الأولية بنجاح.';
   static const String seedDataAlreadyLoaded = 'البيانات الأولية محملة مسبقاً.';
+  static const String backupSectionTitle = 'النسخ الاحتياطي والاستعادة';
+  static const String backupSectionSubtitle =
+      'انسخ قاعدة البيانات إلى ملف آمن، أو استعد نسخة سابقة. يُنشأ نسخة تلقائية عند إغلاق البرنامج.';
+  static const String backupNowButton = 'إنشاء نسخة احتياطية';
+  static const String restoreBackupButton = 'استعادة من ملف';
+  static const String openBackupsFolder = 'فتح مجلد النسخ الاحتياطي';
+  static const String integrityCheckButton = 'فحص سلامة قاعدة البيانات';
+  static const String backupSaveDialogTitle = 'حفظ نسخة قاعدة البيانات';
+  static const String restoreOpenDialogTitle = 'اختيار ملف النسخة الاحتياطية';
+  static const String backupSuccess = 'تم إنشاء النسخة الاحتياطية بنجاح';
+  static const String backupFailed = 'تعذر إنشاء النسخة الاحتياطية';
+  static const String restoreConfirmTitle = 'استعادة قاعدة البيانات';
+  static const String restoreConfirmMessage =
+      'سيتم استبدال البيانات الحالية بالكامل بالنسخة المختارة. أنشئ نسخة احتياطية أولاً إن لم تكن متأكداً. سيُغلق البرنامج بعد الاستعادة.';
+  static const String restoreConfirmButton = 'استعادة وإغلاق البرنامج';
+  static const String restoreSuccessRestart =
+      'تمت الاستعادة. سيتم إغلاق البرنامج الآن، أعد فتحه لتحميل البيانات المستعادة.';
+  static const String restoreFailed = 'تعذر استعادة النسخة الاحتياطية';
+  static const String backupFileNotFound = 'ملف النسخة الاحتياطية غير موجود';
+  static const String backupLivePathMissing = 'مسار قاعدة البيانات غير معروف بعد. أعد فتح البرنامج ثم حاول مرة أخرى.';
+  static const String integrityOk = 'فحص السلامة سليم — لا توجد أخطاء في ملف قاعدة البيانات';
+  static const String integrityFailed = 'فحص السلامة اكتشف مشكلة في الملف';
+  static const String recentBackupsTitle = 'أحدث النسخ التلقائية';
+  static const String noRecentBackups = 'لا توجد نسخ تلقائية بعد. ستُنشأ نسخة عند إغلاق البرنامج.';
+  static const String restoreThisBackup = 'استعادة هذه النسخة';
+  static const String startingNumbersTitle = 'أرقام المستندات الافتتاحية';
+  static const String startingNumbersSubtitle =
+      'تُستخدم فقط عند إصدار أول فاتورة أو أول أمر شغل (عندما لا يوجد رقم سابق).';
+  static const String startingInvoiceNumberLabel = 'رقم أول فاتورة';
+  static const String startingWorkOrderNumberLabel = 'رقم أول أمر شغل';
+  static const String startingNumbersSaved = 'تم حفظ أرقام البداية بنجاح';
+  static const String invalidStartingNumber = 'أدخل رقماً صحيحاً أكبر من صفر';
 
   // ── Common Actions & Buttons ──────────────────────────────────────────
   static const String searchHint = 'بحث بالاسم، الكود، أو رقم الهاتف...';
@@ -431,6 +545,10 @@ abstract final class AppStrings {
   static const String retry = 'إعادة المحاولة';
   static const String print = 'طباعة';
   static const String exportExcel = 'تصدير Excel';
+  static const String exportInventoryExcel = 'تصدير كشف المخزن (Excel)';
+  static const String exportComprehensiveFinancialReport = 'التقرير المالي الشامل (Excel)';
+  static const String exportComprehensiveFinancialTooltip =
+      'تصدير كافة الحسابات والبيانات المالية في ملف إكسيل واحد متعدد الأوراق';
   static const String filter = 'تصفية';
   static const String reset = 'إعادة ضبط';
   static const String submit = 'إرسال';
@@ -462,9 +580,50 @@ abstract final class AppStrings {
   static const String genericError = 'حدث خطأ غير متوقع، يرجى المحاولة لاحقاً';
   static const String operationSuccess = 'تمت العملية بنجاح';
 
+  // ── Employees & Payroll Strings ───────────────────────────────────────
+  static const String employeesTitle = 'الموظفين ومسيرات الرواتب';
+  static const String employeesSubtitle = 'إدارة طاقم العمل، تسجيل السلفيات والمسحوبات، وصرف الرواتب الشهرية';
+  static const String addEmployee = 'إضافة موظف جديد';
+  static const String editEmployee = 'تعديل بيانات الموظف';
+  static const String recordAdvance = 'تسجيل سلفة / مسحوبات';
+  static const String paySalary = 'صرف راتب الموظف';
+  static const String employeeName = 'اسم الموظف';
+  static const String employeeRole = 'المسمى الوظيفي';
+  static const String employeePhone = 'رقم الهاتف';
+  static const String employeeNationalId = 'الرقم القومي';
+  static const String employeeBasicSalary = 'الراتب الأساسي';
+  static const String employeeSalaryType = 'نوع الراتب';
+  static const String employeeHireDate = 'تاريخ التعيين';
+  static const String employeeStatus = 'حالة الموظف';
+  static const String employeeActive = 'نشط';
+  static const String employeeInactive = 'غير نشط / موقوف';
+  static const String tabEmployeesList = 'دليل الموظفين';
+  static const String tabAdvances = 'السلف والمسحوبات';
+  static const String tabSalaries = 'سجل صرف الرواتب';
+  static const String pendingAdvances = 'سلف معلقة لم تخصم';
+  static const String currentMonthAdvances = 'سلفيات هذا الشهر';
+  static const String totalSalariesPaid = 'إجمالي الرواتب المصروفة';
+
+  // ── Expenses Strings ──────────────────────────────────────────────────
+  static const String expensesTitle = 'مصروفات مركز الصيانة';
+  static const String expensesSubtitle = 'تسجيل ومتابعة كافة المصاريف التشغيلية والنثريات العامة للمركز';
+  static const String addExpense = 'تسجيل مصروف جديد';
+  static const String editExpense = 'تعديل المصروف';
+  static const String deleteExpense = 'حذف المصروف';
+  static const String expenseCategory = 'تصنيف المصروف';
+  static const String expenseAmount = 'مبلغ المصروف';
+  static const String expenseDate = 'تاريخ الصرف';
+  static const String expenseDescription = 'البيان / الوصف';
+  static const String expensePaidTo = 'الجهة المستفيدة / المدفوع له';
+  static const String expenseReceiptNumber = 'رقم الإيصال / الفاتورة';
+  static const String todayExpenses = 'مصروفات اليوم';
+  static const String thisMonthExpenses = 'مصروفات هذا الشهر';
+  static const String totalExpenses = 'إجمالي المصروفات';
+
   // ── Phase 1 Print Test Legacy Strings ─────────────────────────────────
   static const String printTestTitle = 'اختبار الطباعة العربي';
   static const String printTestPreviewA4 = 'معاينة فاتورة A4';
   static const String printTestPreviewReceipt = 'معاينة إيصال 80mm';
   static const String printTestButton = 'اختبار الطباعة';
 }
+

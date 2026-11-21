@@ -59,6 +59,18 @@ class AppNavDestination {
       selectedIcon: Icons.fact_check,
     ),
     AppNavDestination(
+      label: AppStrings.navExpenses,
+      route: '/expenses',
+      icon: Icons.payments_outlined,
+      selectedIcon: Icons.payments,
+    ),
+    AppNavDestination(
+      label: AppStrings.navEmployees,
+      route: '/employees',
+      icon: Icons.badge_outlined,
+      selectedIcon: Icons.badge,
+    ),
+    AppNavDestination(
       label: AppStrings.navReports,
       route: '/reports',
       icon: Icons.bar_chart_outlined,

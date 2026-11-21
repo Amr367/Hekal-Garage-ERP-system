@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'core/db/connection/connection.dart';
 import 'core/db/providers.dart';
+import 'core/db/services/backup_service.dart';
 import 'core/navigation/app_router.dart';
 import 'core/printing/font_loader.dart';
 import 'core/strings.dart';
@@ -41,16 +42,52 @@ class GarageErpApp extends ConsumerStatefulWidget {
   ConsumerState<GarageErpApp> createState() => _GarageErpAppState();
 }
 
-class _GarageErpAppState extends ConsumerState<GarageErpApp> {
+class _GarageErpAppState extends ConsumerState<GarageErpApp> with WindowListener {
   @override
   void initState() {
     super.initState();
-    // Initialize SQLite database connection on startup
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final db = ref.read(appDatabaseProvider);
       await db.customSelect('SELECT 1').get();
       debugPrint('Database initialized at: ${DbConnection.databasePath}');
+      await _enableCloseBackup();
     });
+  }
+
+  Future<void> _enableCloseBackup() async {
+    try {
+      windowManager.addListener(this);
+      await windowManager.setPreventClose(true);
+    } catch (_) {
+      // Widget tests and environments without a native window skip this hook.
+    }
+  }
+
+  @override
+  void dispose() {
+    try {
+      windowManager.removeListener(this);
+    } catch (_) {}
+    super.dispose();
+  }
+
+  @override
+  Future<void> onWindowClose() async {
+    try {
+      final preventClose = await windowManager.isPreventClose();
+      if (!preventClose) {
+        return;
+      }
+      try {
+        final db = ref.read(appDatabaseProvider);
+        await BackupService(db).createAutoBackup();
+      } catch (e, st) {
+        debugPrint('Auto-backup on close failed: $e\n$st');
+      }
+      await windowManager.destroy();
+    } catch (e, st) {
+      debugPrint('Window close handler failed: $e\n$st');
+    }
   }
 
   @override

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 70" width="160" height="70">
+  <!-- Chevrolet Bowtie Silhouette Outer -->
+  <polygon points="48,8 112,8 112,22 154,22 148,48 112,48 112,62 48,62 48,48 6,48 12,22 48,22" fill="#1A1A1A"/>
+  <!-- Gold Inner Body -->
+  <polygon points="51,11 109,11 109,25 150,25 145,45 109,45 109,59 51,59 51,45 10,45 15,25 51,25" fill="#CCA033"/>
+  <!-- Highlight / Bevel Top -->
+  <polygon points="51,11 109,11 109,25 80,35 51,25" fill="#E8C55A"/>
+  <polygon points="109,25 150,25 145,45 109,35" fill="#DFB748"/>
+  <polygon points="10,45 51,45 51,59 40,45" fill="#A88020"/>
+  <!-- Center Core -->
+  <polygon points="54,14 106,14 106,26 146,26 142,43 106,43 106,56 54,56 54,43 13,43 17,26 54,26" fill="#D6A838"/>
+</svg>
+

@@ -12,6 +12,7 @@ class AppFormDialog extends StatelessWidget {
     this.saveLabel = AppStrings.save,
     this.cancelLabel = AppStrings.cancel,
     this.onSave,
+    this.extraActions = const <Widget>[],
     this.isLoading = false,
     this.maxWidth = 560,
     this.showSaveButton = true,
@@ -22,6 +23,7 @@ class AppFormDialog extends StatelessWidget {
   final String saveLabel;
   final String cancelLabel;
   final VoidCallback? onSave;
+  final List<Widget> extraActions;
   final bool isLoading;
   final double maxWidth;
   final bool showSaveButton;
@@ -110,15 +112,18 @@ class AppFormDialog extends StatelessWidget {
                     top: BorderSide(color: AppColors.divider),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 8,
                   children: <Widget>[
+                    ...extraActions,
                     OutlinedButton(
                       onPressed: isLoading ? null : () => Navigator.of(context).pop(),
                       child: Text(cancelLabel),
                     ),
-                    if (showSaveButton) ...<Widget>[
-                      const SizedBox(width: 12),
+                    if (showSaveButton)
                       ElevatedButton(
                         onPressed: isLoading ? null : onSave,
                         child: isLoading
@@ -132,7 +137,6 @@ class AppFormDialog extends StatelessWidget {
                               )
                             : Text(saveLabel),
                       ),
-                    ],
                   ],
                 ),
               ),

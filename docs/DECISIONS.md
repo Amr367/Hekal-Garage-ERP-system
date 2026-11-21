@@ -249,4 +249,46 @@ The `pdf` package natively supports RTL layout and Arabic text reshaping when:
   4. **Atomic SQLite Transaction:**
      - The entire handover (invoice creation, stock deduction, payment recording, and status transition to `WorkOrderStatus.delivered`) executes in a single database transaction, guaranteeing 100% data and inventory consistency even during unexpected app crashes or power interruptions.
 
+---
+
+## Phase 8 — Purchases & Suppliers (المشتريات والموردين)
+
+### Inbound Stock Movements via StockService (Rules R2 & R3)
+- Direct inserts into `stock_movements` are strictly prohibited.
+- `PurchasesRepository.createPurchaseInvoice` delegates all inventory addition to `StockService.addMovement` with `StockMovementType.purchaseIn` and positive quantity.
+- Stock on hand is always dynamically computed via `SUM(stock_movements.qty)`.
+
+### Latest Cost Price Tracking (Rule R8)
+- Every purchase invoice line captures the exact purchase unit cost (`unitCost`) in integer piasters (Rule R1).
+- In addition to recording the snapshot in `purchase_invoice_lines`, the item's default `costPrice` in the `items` table is automatically updated to the latest purchase cost.
+- This ensures that subsequent work order lines capture the most up-to-date cost snapshot when spare parts are consumed during vehicle repairs.
+
+### Supplier Debt Calculation and Payment Distribution
+- Supplier balances are dynamically derived from purchase invoices (`totalAmount - paidAmount`).
+- When a payment is recorded for a supplier via `SuppliersRepository.recordPayment`, the system automatically distributes the paid amount across the oldest unpaid invoices in ascending date order.
+- This chronological FIFO payment matching ensures invoice payment statuses (`paid`, `partial`, `unpaid`) accurately reflect real-world commercial settlements.
+
+### Dropdown Responsive Bounding
+- In desktop master-detail forms, `DropdownButtonFormField` widgets must specify `isExpanded: true` to prevent unconstrained horizontal RenderFlex overflow when displaying long item names with category badges and live stock quantities.
+
+---
+
+## Delivery — Backup and restore
+
+### Consistent snapshots with VACUUM INTO
+- Live copy of `garage.sqlite` while WAL is active can capture a torn database.
+- Backups use SQLite `VACUUM INTO` so the destination file is a consistent, compacted snapshot without depending on the `-wal` sidecar.
+
+### Restore requires process restart
+- Drift keeps a native SQLite connection. Replacing the file under a live connection is unsafe.
+- Restore closes the database, copies the snapshot over `garage.sqlite`, deletes `-wal`/`-shm`/`-journal`, then exits so the next launch opens the restored file.
+
+### Close-to-backup must never trap the user
+- `window_manager` prevent-close runs an auto-backup, then always destroys the window even if backup fails.
+- At most 14 automatic files are kept so the support directory does not grow without bound.
+
+### Print-test is not a production screen
+- `/dev/print-test` and Ctrl+P navigation to it are debug-only. Release builds send Ctrl+P to invoices and redirect the route to the dashboard.
+
+
 
