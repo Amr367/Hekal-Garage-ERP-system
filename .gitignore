@@ -60,6 +60,8 @@ app.*.map.json
 # Release packages & preview exports
 *.zip
 Hekal_Garage_Package/
+Hekal_Garage_ERP_*/
+dist/
 *.pdf
 /deployment/App/
 

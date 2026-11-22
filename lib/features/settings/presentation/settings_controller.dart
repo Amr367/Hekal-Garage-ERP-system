@@ -31,6 +31,7 @@ class GarageProfileNotifier extends AsyncNotifier<GarageProfile> {
   static const String keyTaxNumber = 'garage_tax_number';
   static const String keyCommercialReg = 'garage_commercial_reg';
   static const String keyFooter = 'garage_invoice_footer';
+  static const String keyJobCardDisclaimer = 'garage_job_card_disclaimer';
   static const String keyLogoPath = 'garage_logo_path';
 
   @override
@@ -53,6 +54,7 @@ class GarageProfileNotifier extends AsyncNotifier<GarageProfile> {
     final taxNumber = await repo.getWithDefault(keyTaxNumber, '');
     final commercialReg = await repo.getWithDefault(keyCommercialReg, '');
     final footer = await repo.getWithDefault(keyFooter, AppStrings.invoiceFooterNoteDefault);
+    final disclaimer = await repo.getWithDefault(keyJobCardDisclaimer, '');
     final logoPath = await repo.get(keyLogoPath);
 
     return GarageProfile(
@@ -64,6 +66,7 @@ class GarageProfileNotifier extends AsyncNotifier<GarageProfile> {
       taxNumber: taxNumber,
       commercialReg: commercialReg,
       invoiceFooterNote: footer,
+      customDisclaimer: disclaimer,
       logoPath: (logoPath != null && File(logoPath).existsSync()) ? logoPath : null,
     );
   }
@@ -80,6 +83,7 @@ class GarageProfileNotifier extends AsyncNotifier<GarageProfile> {
     await repo.set(keyTaxNumber, profile.taxNumber);
     await repo.set(keyCommercialReg, profile.commercialReg);
     await repo.set(keyFooter, profile.invoiceFooterNote);
+    await repo.set(keyJobCardDisclaimer, profile.customDisclaimer ?? '');
     if (profile.logoPath != null) {
       await repo.set(keyLogoPath, profile.logoPath!);
     } else {

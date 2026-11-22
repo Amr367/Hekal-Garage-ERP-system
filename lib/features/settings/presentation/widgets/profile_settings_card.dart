@@ -341,10 +341,11 @@ class _ProfileSettingsCardState extends ConsumerState<ProfileSettingsCard> {
 
                   TextFormField(
                     controller: _disclaimerController,
-                    maxLines: 3,
+                    maxLines: 4,
                     decoration: const InputDecoration(
-                      labelText: 'ملاحظة وإقرار الاستلام أسفل أمر الشغل (النص الأحمر)',
-                      hintText: 'اتركه فارغاً للاحتفاظ بالنص الافتراضي للنظام',
+                      labelText: 'نص إقرار العميل أسفل كارت أمر الشغل',
+                      hintText: AppStrings.jobCardDisclaimerDefault,
+                      alignLabelWithHint: true,
                     ),
                   ),
                 ],

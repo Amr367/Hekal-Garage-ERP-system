@@ -6,6 +6,8 @@ abstract final class AppStrings {
   static const String garageSubtitleDefault = 'لاصلاح السيارات';
   static const String invoiceFooterNoteDefault =
       'شكراً لتعاملكم معنا. البضاعة المباعة ترد وتستبدل خلال 14 يوماً وفقاً للشروط.';
+  static const String jobCardDisclaimerDefault =
+      'عزيزي العميل: تم استلام السيارة للفحص والصيانة الموضحة أعلاه. أي عمل إضافي يتم بعد موافقتكم. الأسعار تصدر في فاتورة التسليم.';
   static const String currencySymbol = 'ج.م';
   static const String currencyLabel = 'العملة: الجنيه المصري (ج.م)';
   static const String rtlProofLabel = 'اتجاه النص: من اليمين لليسار';

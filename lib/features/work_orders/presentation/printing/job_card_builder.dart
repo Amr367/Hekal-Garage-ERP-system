@@ -6,6 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../core/printing/car_brand_logos.dart';
 import '../../../../core/printing/font_loader.dart';
+import '../../../../core/strings.dart';
 import '../../../settings/domain/garage_profile.dart';
 import '../../domain/work_order_with_details.dart';
 
@@ -536,29 +537,28 @@ class JobCardBuilder {
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(5)),
         color: PdfColors.grey100,
       ),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.center,
-        children: <pw.Widget>[
-          pw.Text(
-            'إجمالي بنود أمر الشغل: ${order.lines.length} بند  (أعمال ومصنعيات: $servicesCount  •  قطع غيار: $partsCount)',
-            style: pw.TextStyle(font: bold, fontSize: 9, color: PdfColors.black),
-          ),
-        ],
+      child: pw.Text(
+        'إجمالي بنود أمر الشغل: ${order.lines.length} بند  (أعمال ومصنعيات: $servicesCount  •  قطع غيار: $partsCount)',
+        textAlign: pw.TextAlign.center,
+        style: pw.TextStyle(font: bold, fontSize: 9, color: PdfColors.black),
       ),
     );
   }
 
   // ── Customer Disclaimer Note in Red ───────────────────────────────────────
   pw.Widget _buildCustomerDisclaimer(pw.Font bold) {
+    final text = garageProfile?.customDisclaimer?.trim().isNotEmpty == true
+        ? garageProfile!.customDisclaimer!.trim()
+        : AppStrings.jobCardDisclaimerDefault;
     return pw.Container(
-      alignment: pw.Alignment.center,
-      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      width: double.infinity,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: pw.Text(
-        garageProfile?.customDisclaimer?.isNotEmpty == true ? garageProfile!.customDisclaimer! : 'عزيزي العميل : تم استلام السيارة لإجراء الفحص الفني والتشخيص ومباشرة أعمال الصيانة المحددة أعلاه. سيتم إخطاركم وموافقتكم على أي قطع أو أعمال إضافية تظهر أثناء الفحص والعمل. الأسعار وتكلفة الصيانة تُحدد رسمياً بفاتورة الصيانة عند التسليم.',
+        text,
         textAlign: pw.TextAlign.center,
         style: pw.TextStyle(
           font: bold,
-          fontSize: 8.5,
+          fontSize: 8,
           color: _primaryRed,
         ),
       ),

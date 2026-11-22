@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 $sourceDir = "d:\Hekal\build\windows\x64\runner\Release"
 $packageDir = "d:\Hekal\Hekal_Garage_Package"
@@ -11,8 +11,10 @@ New-Item -ItemType Directory -Path "$packageDir\App" -Force | Out-Null
 Write-Host "Copying application release files..."
 Copy-Item -Path "$sourceDir\*" -Destination "$packageDir\App" -Recurse -Force
 
-Write-Host "Copying installer and guide scripts..."
-Copy-Item -Path "d:\Hekal\deployment\تثبيت_البرنامج_على_هذا_الجهاز.bat" -Destination "$packageDir\" -Force
+Write-Host "Copying installer and launcher scripts..."
+Copy-Item -Path "d:\Hekal\deployment\Install.bat" -Destination "$packageDir\" -Force
+Copy-Item -Path "d:\Hekal\deployment\install.ps1" -Destination "$packageDir\" -Force
+Copy-Item -Path "d:\Hekal\deployment\Run_App.bat" -Destination "$packageDir\" -Force
 Copy-Item -Path "d:\Hekal\deployment\دليل_الربط_والتثبيت.txt" -Destination "$packageDir\" -Force
 
 Write-Host "Compressing package into ZIP..."
