@@ -59,6 +59,12 @@ class AppNavDestination {
       selectedIcon: Icons.fact_check,
     ),
     AppNavDestination(
+      label: AppStrings.navReturns,
+      route: '/returns',
+      icon: Icons.assignment_return_outlined,
+      selectedIcon: Icons.assignment_return,
+    ),
+    AppNavDestination(
       label: AppStrings.navExpenses,
       route: '/expenses',
       icon: Icons.payments_outlined,

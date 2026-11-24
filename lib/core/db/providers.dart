@@ -10,6 +10,7 @@ import 'repositories/invoices_repository.dart';
 import 'repositories/items_repository.dart';
 import 'repositories/purchases_repository.dart';
 import 'repositories/reports_repository.dart';
+import 'repositories/returns_repository.dart';
 import 'repositories/services_repository.dart';
 import 'repositories/settings_repository.dart';
 import 'repositories/stock_count_repository.dart';
@@ -110,6 +111,13 @@ final employeesRepositoryProvider = Provider<EmployeesRepository>((ref) {
 
 final expensesRepositoryProvider = Provider<ExpensesRepository>((ref) {
   return DriftExpensesRepository(ref.watch(appDatabaseProvider));
+});
+
+final returnsRepositoryProvider = Provider<ReturnsRepository>((ref) {
+  return DriftReturnsRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(stockServiceProvider),
+  );
 });
 
 /// Domain services providers.

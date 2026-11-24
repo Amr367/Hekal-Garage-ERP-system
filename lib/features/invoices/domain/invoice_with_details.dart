@@ -22,6 +22,7 @@ class InvoiceWithDetails {
   final List<Payment> payments;
 
   int get id => invoice.id;
+  int? get customerId => invoice.customerId;
   int get invoiceNumber => invoice.invoiceNumber;
   String get invoiceNumberFormatted => '#${invoice.invoiceNumber}';
 

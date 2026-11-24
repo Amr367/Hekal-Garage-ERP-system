@@ -25,6 +25,7 @@ dependencies:
   pdf: ^3.11.3 # Build A4 invoices and 80mm receipts as PDF documents.
   printing: ^5.14.2 # Preview, list printers, and print locally with no network.
   sqlite3_flutter_libs: ^0.5.41 # Bundled SQLite so the app runs offline on Windows.
+  stream_channel: ^2.1.2 # LAN network sync and remote database channels.
   window_manager: ^0.5.1 # Window title, minimum size 1100x700, and close-to-backup hook.
 
 dev_dependencies:

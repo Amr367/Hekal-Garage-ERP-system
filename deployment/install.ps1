@@ -1,4 +1,4 @@
-﻿# PowerShell Robust Installer for Hekal Garage ERP
+# PowerShell Robust Installer for Hekal Garage ERP
 $ErrorActionPreference = "Stop"
 
 # Self-elevate to Administrator if needed (UAC prompt)

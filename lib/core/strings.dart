@@ -21,6 +21,7 @@ abstract final class AppStrings {
   static const String navInventory = 'المخزن والأصناف';
   static const String navPurchases = 'المشتريات والموردين';
   static const String navStockCount = 'الجرد السنوي';
+  static const String navReturns = 'المرتجعات';
   static const String navEmployees = 'الموظفين والرواتب';
   static const String navExpenses = 'مصروفات المركز';
   static const String navReports = 'التقارير المالية';
@@ -621,6 +622,44 @@ abstract final class AppStrings {
   static const String todayExpenses = 'مصروفات اليوم';
   static const String thisMonthExpenses = 'مصروفات هذا الشهر';
   static const String totalExpenses = 'إجمالي المصروفات';
+
+  // ── Returns Department ────────────────────────────────────────────────
+  static const String returnsTitle = 'إدارة المرتجعات';
+  static const String returnsSubtitle =
+      'تسجيل ومتابعة مرتجعات مبيعات العملاء ومرتجعات مشتريات الموردين وتحديث المخزون آلياً';
+  static const String newSaleReturnButton = 'مرتجع مبيعات (عميل)';
+  static const String newPurchaseReturnButton = 'مرتجع مشتريات (مورد)';
+  static const String returnNumberLabel = 'رقم إذن المرتجع';
+  static const String returnTypeLabel = 'نوع المرتجع';
+  static const String saleReturn = 'مرتجع مبيعات';
+  static const String purchaseReturn = 'مرتجع مشتريات';
+  static const String allReturns = 'كافة المرتجعات';
+  static const String filterReturnType = 'تصفية بنوع المرتجع';
+  static const String returnsSearchHint =
+      'بحث برقم المرتجع، اسم العميل، اسم المورد، أو سبب الإرجاع...';
+  static const String totalReturnsCount = 'إجمالي أذونات المرتجع';
+  static const String totalSalesReturnsAmount = 'إجمالي مرتجع المبيعات (للعملاء)';
+  static const String totalPurchaseReturnsAmount = 'إجمالي مرتجع المشتريات (من الموردين)';
+  static const String refundMethodLabel = 'طريقة تسوية / استرداد المبلغ';
+  static const String refundCash = 'نقداً (من الخزينة)';
+  static const String refundBank = 'تحويل بنكي / محفظة';
+  static const String refundCustomerCredit = 'خصم من حساب العميل (آجل)';
+  static const String refundSupplierCredit = 'إضافة لحساب المورد (آجل)';
+  static const String returnReasonLabel = 'سبب الإرجاع';
+  static const String returnReasonHint =
+      'اكتب سبب الإرجاع (عيوب صناعة، عدم مطابقة، رغبة العميل، إلغاء طلب... إلخ)';
+  static const String selectInvoicePrompt = 'اختيار الفاتورة الأصلية (اختياري)';
+  static const String returnedItemsLabel = 'الأصناف المرتجعة';
+  static const String returnQuantityLabel = 'الكمية المرتجعة';
+  static const String originalQuantityLabel = 'الكمية الأصلية';
+  static const String printReturnReceipt = 'طباعة إيصال المرتجع';
+  static const String printReturnA4 = 'طباعة إيصال مرتجع A4';
+  static const String printReturnThermal = 'طباعة إيصال حراري (80mm)';
+  static const String deleteReturnButton = 'حذف إذن المرتجع';
+  static const String confirmDeleteReturn =
+      'هل أنت متأكد من حذف إذن المرتجع هذا؟ سيتم التراجع عن حركات المخزون ذات الصلة.';
+  static const String returnCreatedSuccess = 'تم تسجيل إذن المرتجع وتحديث المخزون بنجاح';
+  static const String returnDeletedSuccess = 'تم حذف إذن المرتجع بنجاح';
 
   // ── Phase 1 Print Test Legacy Strings ─────────────────────────────────
   static const String printTestTitle = 'اختبار الطباعة العربي';

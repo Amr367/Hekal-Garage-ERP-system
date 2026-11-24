@@ -10,6 +10,7 @@ import '../../features/inventory/inventory_page.dart';
 import '../../features/invoices/invoices_page.dart';
 import '../../features/purchases/purchases_page.dart';
 import '../../features/reports/reports_page.dart';
+import '../../features/returns/returns_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/stock_count/stock_count_page.dart';
 import '../../features/work_orders/work_orders_page.dart';
@@ -77,6 +78,12 @@ final GoRouter appRouter = GoRouter(
           path: '/stock-count',
           pageBuilder: (BuildContext context, GoRouterState state) => const NoTransitionPage<void>(
             child: StockCountPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/returns',
+          pageBuilder: (BuildContext context, GoRouterState state) => const NoTransitionPage<void>(
+            child: ReturnsPage(),
           ),
         ),
         GoRoute(

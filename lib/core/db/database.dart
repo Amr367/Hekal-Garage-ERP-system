@@ -44,6 +44,11 @@ enum StockCountStatus {
   finalized, // 1 - معتمد
 }
 
+enum ReturnType {
+  saleReturn, // 0 - مرتجع مبيعات عميل
+  purchaseReturn, // 1 - مرتجع مشتريات مورد
+}
+
 // ── Tables ─────────────────────────────────────────────────────────────
 
 class Customers extends Table {
@@ -288,6 +293,32 @@ class Expenses extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+class Returns extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get returnNumber => integer()();
+  IntColumn get returnType => intEnum<ReturnType>()();
+  IntColumn get invoiceId => integer().nullable().references(Invoices, #id)();
+  IntColumn get purchaseInvoiceId => integer().nullable().references(PurchaseInvoices, #id)();
+  IntColumn get customerId => integer().nullable().references(Customers, #id)();
+  IntColumn get supplierId => integer().nullable().references(Suppliers, #id)();
+  TextColumn get customerName => text().nullable()();
+  TextColumn get supplierName => text().nullable()();
+  IntColumn get totalAmount => integer()(); // piasters
+  IntColumn get refundMethod => intEnum<PaymentMethod>().withDefault(const Constant(0))();
+  TextColumn get reason => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class ReturnLines extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get returnId => integer().references(Returns, #id)();
+  IntColumn get itemId => integer().nullable().references(Items, #id)();
+  TextColumn get description => text()();
+  RealColumn get quantity => real()();
+  IntColumn get unitPrice => integer()(); // piasters
+  IntColumn get totalPrice => integer()(); // piasters
+}
+
 // ── Database Class ─────────────────────────────────────────────────────
 
 @DriftDatabase(tables: [
@@ -312,12 +343,14 @@ class Expenses extends Table {
   EmployeeAdvances,
   SalaryPayments,
   Expenses,
+  Returns,
+  ReturnLines,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -335,6 +368,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           await m.addColumn(workOrders, workOrders.entryDate);
           await m.addColumn(workOrders, workOrders.expectedExitDate);
+        }
+        if (from < 4) {
+          await m.createTable(returns);
+          await m.createTable(returnLines);
         }
       },
       beforeOpen: (OpeningDetails details) async {
@@ -418,6 +455,17 @@ class AppDatabase extends _$AppDatabase {
       return 1;
     }
     return currentMax + 1;
+  }
+
+  /// Returns the next sequential return number without gaps.
+  Future<int> nextReturnNumber(ReturnType type) async {
+    final maxNum = returns.returnNumber.max();
+    final query = selectOnly(returns)
+      ..addColumns([maxNum])
+      ..where(returns.returnType.equals(type.index));
+    final row = await query.getSingle();
+    final currentMax = row.read(maxNum);
+    return (currentMax ?? 0) + 1;
   }
 
   /// Backs up the SQLite database using SQLite's online backup API (VACUUM INTO).
