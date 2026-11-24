@@ -60,8 +60,8 @@ class ReportDateRangeNotifier extends Notifier<ReportDateRange> {
 
 final reportDateRangeProvider =
     NotifierProvider<ReportDateRangeNotifier, ReportDateRange>(
-  ReportDateRangeNotifier.new,
-);
+      ReportDateRangeNotifier.new,
+    );
 
 /// Active tab index in the reports dashboard:
 /// 0: Sales & Revenue (المبيعات والإيرادات)
@@ -77,29 +77,32 @@ class ReportsSelectedTabNotifier extends Notifier<int> {
 
 final reportsSelectedTabProvider =
     NotifierProvider<ReportsSelectedTabNotifier, int>(
-  ReportsSelectedTabNotifier.new,
-);
+      ReportsSelectedTabNotifier.new,
+    );
 
 // ── Data Providers ────────────────────────────────────────────────────
 
 /// Sales & revenue report provider.
-final salesReportProvider =
-    FutureProvider.autoDispose<SalesReportData>((ref) async {
+final salesReportProvider = FutureProvider.autoDispose<SalesReportData>((
+  ref,
+) async {
   final repo = ref.watch(reportsRepositoryProvider);
   final range = ref.watch(reportDateRangeProvider);
   return repo.getSalesReport(range.start, range.end);
 });
 
 /// Inventory valuation & stagnation report provider.
-final inventoryReportProvider =
-    FutureProvider.autoDispose<InventoryReportData>((ref) async {
-  final repo = ref.watch(reportsRepositoryProvider);
-  return repo.getInventoryReport();
-});
+final inventoryReportProvider = FutureProvider.autoDispose<InventoryReportData>(
+  (ref) async {
+    final repo = ref.watch(reportsRepositoryProvider);
+    return repo.getInventoryReport();
+  },
+);
 
 /// Debts & receivables report provider.
-final debtsReportProvider =
-    FutureProvider.autoDispose<DebtsReportData>((ref) async {
+final debtsReportProvider = FutureProvider.autoDispose<DebtsReportData>((
+  ref,
+) async {
   final repo = ref.watch(reportsRepositoryProvider);
   return repo.getDebtsReport();
 });
@@ -128,7 +131,9 @@ class ReportsActionsController {
       );
 
       if (savePath != null) {
-        final file = File(savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx');
+        final file = File(
+          savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx',
+        );
         await file.writeAsBytes(Uint8List.fromList(bytes));
         if (context.mounted) {
           AppSnackbar.showSuccess(context, 'تم تصدير ملف الإكسيل بنجاح');
@@ -156,7 +161,9 @@ class ReportsActionsController {
       );
 
       if (savePath != null) {
-        final file = File(savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx');
+        final file = File(
+          savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx',
+        );
         await file.writeAsBytes(Uint8List.fromList(bytes));
         if (context.mounted) {
           AppSnackbar.showSuccess(context, 'تم تصدير ملف الأرباح بنجاح');
@@ -184,7 +191,9 @@ class ReportsActionsController {
       );
 
       if (savePath != null) {
-        final file = File(savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx');
+        final file = File(
+          savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx',
+        );
         await file.writeAsBytes(Uint8List.fromList(bytes));
         if (context.mounted) {
           AppSnackbar.showSuccess(context, 'تم تصدير ملف تقييم المخزون بنجاح');
@@ -212,7 +221,9 @@ class ReportsActionsController {
       );
 
       if (savePath != null) {
-        final file = File(savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx');
+        final file = File(
+          savePath.endsWith('.xlsx') ? savePath : '$savePath.xlsx',
+        );
         await file.writeAsBytes(Uint8List.fromList(bytes));
         if (context.mounted) {
           AppSnackbar.showSuccess(context, 'تم تصدير تقرير المديونيات بنجاح');
@@ -243,32 +254,34 @@ class ReportsActionsController {
       final purchRepo = _ref.read(purchasesRepositoryProvider);
       final allPurchases = await purchRepo.getPurchaseInvoices();
       final purchasesInRange = allPurchases.where((p) {
-        return p.invoiceDate
-                .isAfter(range.start.subtract(const Duration(seconds: 1))) &&
-            p.invoiceDate
-                .isBefore(range.end.add(const Duration(seconds: 1)));
+        return p.invoiceDate.isAfter(
+              range.start.subtract(const Duration(seconds: 1)),
+            ) &&
+            p.invoiceDate.isBefore(range.end.add(const Duration(seconds: 1)));
       }).toList();
 
       // Fetch returns within the date range for the comprehensive report
       final retRepo = _ref.read(returnsRepositoryProvider);
       final allReturns = await retRepo.getAll();
       final returnsInRange = allReturns.where((r) {
-        return r.createdAt
-                .isAfter(range.start.subtract(const Duration(seconds: 1))) &&
-            r.createdAt
-                .isBefore(range.end.add(const Duration(seconds: 1)));
+        return r.createdAt.isAfter(
+              range.start.subtract(const Duration(seconds: 1)),
+            ) &&
+            r.createdAt.isBefore(range.end.add(const Duration(seconds: 1)));
       }).toList();
 
-      final bytes = ExcelExportService.exportComprehensiveFinancialReportToExcel(
-        salesData: salesData,
-        expenses: expenses,
-        purchases:
-            purchasesInRange.isNotEmpty ? purchasesInRange : allPurchases,
-        debtsData: debtsData,
-        inventoryData: inventoryData,
-        range: range,
-        returns: returnsInRange.isNotEmpty ? returnsInRange : null,
-      );
+      final bytes =
+          ExcelExportService.exportComprehensiveFinancialReportToExcel(
+            salesData: salesData,
+            expenses: expenses,
+            purchases: purchasesInRange.isNotEmpty
+                ? purchasesInRange
+                : allPurchases,
+            debtsData: debtsData,
+            inventoryData: inventoryData,
+            range: range,
+            returns: returnsInRange.isNotEmpty ? returnsInRange : null,
+          );
 
       final defaultName =
           'comprehensive_financial_report_${range.start.year}_${range.start.month}.xlsx';
@@ -280,8 +293,7 @@ class ReportsActionsController {
         bytes: bytes,
         defaultFileName: defaultName,
         dialogTitle: 'تصدير التقرير المالي الشامل إلى Excel',
-        successMessage:
-            'تم تصدير التقرير المالي الشامل بنجاح (ملف مجمع بكافة الحسابات المالية)',
+        successMessage: 'تم تصدير التقرير المالي الشامل بنجاح (ملف مجمع بكافة الحسابات المالية)',
       );
     } catch (e) {
       if (context.mounted) {
