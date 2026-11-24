@@ -156,6 +156,28 @@ class DriftReportsRepository implements ReportsRepository {
       totalSalariesPaid += sal.netPaid;
     }
 
+    // 6. Returns within date range
+    final returnsInPeriod = await (_db.select(_db.returns)
+          ..where((t) =>
+              t.createdAt.isBiggerOrEqualValue(start) &
+              t.createdAt.isSmallerOrEqualValue(end)))
+        .get();
+
+    int totalSalesReturns = 0;
+    int totalPurchaseReturns = 0;
+    int salesReturnsCount = 0;
+    int purchaseReturnsCount = 0;
+
+    for (final ret in returnsInPeriod) {
+      if (ret.returnType == ReturnType.saleReturn) {
+        totalSalesReturns += ret.totalAmount;
+        salesReturnsCount++;
+      } else {
+        totalPurchaseReturns += ret.totalAmount;
+        purchaseReturnsCount++;
+      }
+    }
+
     final grossProfit = totalInvoiced - partsCost;
 
     return SalesReportData(
@@ -171,6 +193,10 @@ class DriftReportsRepository implements ReportsRepository {
       invoices: invoiceRows,
       operatingExpensesPiasters: totalOperatingExpenses,
       salariesPaidPiasters: totalSalariesPaid,
+      salesReturnsPiasters: totalSalesReturns,
+      purchaseReturnsPiasters: totalPurchaseReturns,
+      salesReturnsCount: salesReturnsCount,
+      purchaseReturnsCount: purchaseReturnsCount,
     );
   }
 

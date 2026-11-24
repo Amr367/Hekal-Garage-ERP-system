@@ -15,6 +15,7 @@ import '../../features/reports/domain/debts_report_data.dart';
 import '../../features/reports/domain/inventory_report_data.dart';
 import '../../features/reports/domain/report_date_range.dart';
 import '../../features/reports/domain/sales_report_data.dart';
+import '../../features/returns/domain/return_with_details.dart';
 
 /// Centralized service for generating and exporting Excel (.xlsx) files
 /// for inventory (المخزن), financial accounts (المصروفات، الإيرادات، المشتريات، الديون),
@@ -453,6 +454,7 @@ abstract final class ExcelExportService {
     required DebtsReportData debtsData,
     required InventoryReportData inventoryData,
     required ReportDateRange range,
+    List<ReturnWithDetails>? returns,
   }) {
     final excel = Excel.createExcel();
 
@@ -495,6 +497,12 @@ abstract final class ExcelExportService {
       DoubleCellValue(salesData.totalPaidPiasters / 100),
       TextCellValue('إجمالي الآجل المتبقي على العملاء بالفترة (ج.م)'),
       DoubleCellValue(salesData.totalRemainingPiasters / 100),
+    ]);
+    summarySheet.appendRow([
+      TextCellValue('مرتجع مبيعات العملاء (ج.م)'),
+      DoubleCellValue(salesData.salesReturnsPiasters / 100),
+      TextCellValue('صافي المبيعات الفعلي (ج.م)'),
+      DoubleCellValue(salesData.netRevenuePiasters / 100),
     ]);
     summarySheet.appendRow([TextCellValue('')]);
 
@@ -775,7 +783,136 @@ abstract final class ExcelExportService {
       ]);
     }
 
+    // ── Sheet 8: أذونات المرتجعات (إن وجدت) ───────────────────────────────────
+    if (returns != null && returns.isNotEmpty) {
+      final retSheet = excel['أذونات المرتجعات'];
+      retSheet.appendRow([TextCellValue('سجل أذونات المرتجعات بالفترة')]);
+      retSheet.appendRow([TextCellValue('')]);
+      retSheet.appendRow([
+        TextCellValue('م'),
+        TextCellValue('رقم المرتجع'),
+        TextCellValue('نوع المرتجع'),
+        TextCellValue('الطرف (العميل / المورد)'),
+        TextCellValue('المرجع'),
+        TextCellValue('التاريخ والوقت'),
+        TextCellValue('طريقة التسوية'),
+        TextCellValue('سبب الإرجاع'),
+        TextCellValue('المبلغ المسترد (ج.م)'),
+        TextCellValue('عدد الأصناف'),
+        TextCellValue('بيان الأصناف المرتجعة'),
+      ]);
+
+      for (int i = 0; i < returns.length; i++) {
+        final r = returns[i];
+        final itemsSummary = r.lines
+            .map((l) => '${l.description} (${l.quantity} × ${(l.unitPrice / 100).toStringAsFixed(1)})')
+            .join(' ، ');
+
+        retSheet.appendRow([
+          IntCellValue(i + 1),
+          TextCellValue(r.returnNumberFormatted),
+          TextCellValue(r.typeLabel),
+          TextCellValue(r.partyName),
+          TextCellValue(r.referenceLabel ?? '—'),
+          TextCellValue(r.formattedDate),
+          TextCellValue(r.refundMethodLabel),
+          TextCellValue(r.entry.reason ?? '—'),
+          DoubleCellValue(r.totalAmount / 100),
+          IntCellValue(r.lines.length),
+          TextCellValue(itemsSummary),
+        ]);
+      }
+    }
+
     return excel.encode()!;
+  }
+
+  // ── Returns Export (تصدير كشف أذونات المرتجعات) ──────────────────────────
+
+  /// Exports returns vouchers list to an Excel workbook with party details,
+  /// amounts, settlement methods, and returned items.
+  static List<int> exportReturnsToExcel(
+    List<ReturnWithDetails> returns, {
+    String? periodLabel,
+  }) {
+    final excel = Excel.createExcel();
+    const sheetName = 'أذونات المرتجعات';
+    final sheet = excel[sheetName];
+    excel.setDefaultSheet(sheetName);
+    if (excel.sheets.containsKey('Sheet1')) {
+      excel.delete('Sheet1');
+    }
+
+    int salesReturnsTotal = 0;
+    int purchaseReturnsTotal = 0;
+    int salesCount = 0;
+    int purchaseCount = 0;
+
+    for (final ret in returns) {
+      if (ret.isSaleReturn) {
+        salesReturnsTotal += ret.totalAmount;
+        salesCount++;
+      } else {
+        purchaseReturnsTotal += ret.totalAmount;
+        purchaseCount++;
+      }
+    }
+
+    final now = DateTime.now();
+    final dateStr =
+        '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}';
+
+    // Title & Meta
+    sheet.appendRow([
+      TextCellValue(
+        'كشف وسجل أذونات المرتجعات — تاريخ التصدير: $dateStr'
+        '${periodLabel != null ? " ($periodLabel)" : ""}',
+      ),
+    ]);
+    sheet.appendRow([
+      TextCellValue(
+        'إجمالي العمليات: ${returns.length} | مرتجع مبيعات: $salesCount (${(salesReturnsTotal / 100).toStringAsFixed(2)} ج.م) | مرتجع مشتريات: $purchaseCount (${(purchaseReturnsTotal / 100).toStringAsFixed(2)} ج.م)',
+      ),
+    ]);
+    sheet.appendRow([TextCellValue('')]);
+
+    // Table Header
+    sheet.appendRow([
+      TextCellValue('م'),
+      TextCellValue('رقم المرتجع'),
+      TextCellValue('نوع المرتجع'),
+      TextCellValue('الطرف (العميل / المورد)'),
+      TextCellValue('الفاتورة المرجعية'),
+      TextCellValue('التاريخ والوقت'),
+      TextCellValue('طريقة التسوية'),
+      TextCellValue('سبب الإرجاع'),
+      TextCellValue('إجمالي المبلغ (ج.م)'),
+      TextCellValue('عدد الأصناف'),
+      TextCellValue('بيان الأصناف المرتجعة'),
+    ]);
+
+    for (int i = 0; i < returns.length; i++) {
+      final ret = returns[i];
+      final itemsSummary = ret.lines
+          .map((l) => '${l.description} (${l.quantity} × ${(l.unitPrice / 100).toStringAsFixed(1)})')
+          .join(' ، ');
+
+      sheet.appendRow([
+        IntCellValue(i + 1),
+        TextCellValue(ret.returnNumberFormatted),
+        TextCellValue(ret.typeLabel),
+        TextCellValue(ret.partyName),
+        TextCellValue(ret.referenceLabel ?? '—'),
+        TextCellValue(ret.formattedDate),
+        TextCellValue(ret.refundMethodLabel),
+        TextCellValue(ret.entry.reason ?? '—'),
+        DoubleCellValue(ret.totalAmount / 100),
+        IntCellValue(ret.lines.length),
+        TextCellValue(itemsSummary),
+      ]);
+    }
+
+    return excel.encode() ?? <int>[];
   }
 
   // ── 6. Inventory Template & Import Helpers ─────────────────────────────────

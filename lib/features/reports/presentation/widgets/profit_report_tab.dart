@@ -164,6 +164,25 @@ class ProfitReportTab extends ConsumerWidget {
                   icon: Icons.payments_outlined,
                   amountColor: AppColors.danger,
                 ),
+                const SizedBox(height: 16),
+
+                _AnalysisRow(
+                  title: 'مرتجع مبيعات العملاء (خصم من الإيرادات)',
+                  amount: '- ${data.formattedSalesReturns}',
+                  subtitle: 'إجمالي ${data.salesReturnsCount} إذن مرتجع مبيعات خلال الفترة',
+                  icon: Icons.undo_outlined,
+                  amountColor: AppColors.danger,
+                ),
+                if (data.purchaseReturnsPiasters > 0) ...[
+                  const SizedBox(height: 16),
+                  _AnalysisRow(
+                    title: 'مرتجع مشتريات الموردين (خصم من تكلفة المشتريات)',
+                    amount: '+ ${data.formattedPurchaseReturns}',
+                    subtitle: 'إجمالي ${data.purchaseReturnsCount} إذن مرتجع مشتريات خلال الفترة',
+                    icon: Icons.replay_outlined,
+                    amountColor: AppColors.success,
+                  ),
+                ],
 
                 const SizedBox(height: 16),
                 const Divider(),

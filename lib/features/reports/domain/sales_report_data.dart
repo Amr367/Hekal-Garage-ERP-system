@@ -62,6 +62,10 @@ class SalesReportData {
     required this.invoices,
     this.operatingExpensesPiasters = 0,
     this.salariesPaidPiasters = 0,
+    this.salesReturnsPiasters = 0,
+    this.purchaseReturnsPiasters = 0,
+    this.salesReturnsCount = 0,
+    this.purchaseReturnsCount = 0,
   });
 
   final int totalInvoices;
@@ -76,14 +80,22 @@ class SalesReportData {
   final List<SalesReportInvoiceRow> invoices;
   final int operatingExpensesPiasters;
   final int salariesPaidPiasters;
+  final int salesReturnsPiasters;
+  final int purchaseReturnsPiasters;
+  final int salesReturnsCount;
+  final int purchaseReturnsCount;
 
+  int get netRevenuePiasters => totalRevenuePiasters - salesReturnsPiasters;
   int get totalExpensesAndSalariesPiasters =>
       operatingExpensesPiasters + salariesPaidPiasters;
   int get netOperatingProfitPiasters =>
-      grossProfitPiasters - totalExpensesAndSalariesPiasters;
+      (grossProfitPiasters - salesReturnsPiasters) - totalExpensesAndSalariesPiasters;
 
   /// Formatted money getters
   String get formattedTotalRevenue => MoneyUtils.format(totalRevenuePiasters, withCurrency: true);
+  String get formattedNetRevenue => MoneyUtils.format(netRevenuePiasters, withCurrency: true);
+  String get formattedSalesReturns => MoneyUtils.format(salesReturnsPiasters, withCurrency: true);
+  String get formattedPurchaseReturns => MoneyUtils.format(purchaseReturnsPiasters, withCurrency: true);
   String get formattedPartsRevenue => MoneyUtils.format(partsRevenuePiasters, withCurrency: true);
   String get formattedServicesRevenue => MoneyUtils.format(servicesRevenuePiasters, withCurrency: true);
   String get formattedPartsCost => MoneyUtils.format(partsCostPiasters, withCurrency: true);

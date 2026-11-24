@@ -1,2 +1,2 @@
 @echo off
-start "" "%~dp0App\garage_erp.exe"
+start "" "%~dp0Run_App.exe"

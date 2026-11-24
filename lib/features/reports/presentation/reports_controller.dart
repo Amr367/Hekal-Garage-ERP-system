@@ -249,6 +249,16 @@ class ReportsActionsController {
                 .isBefore(range.end.add(const Duration(seconds: 1)));
       }).toList();
 
+      // Fetch returns within the date range for the comprehensive report
+      final retRepo = _ref.read(returnsRepositoryProvider);
+      final allReturns = await retRepo.getAll();
+      final returnsInRange = allReturns.where((r) {
+        return r.createdAt
+                .isAfter(range.start.subtract(const Duration(seconds: 1))) &&
+            r.createdAt
+                .isBefore(range.end.add(const Duration(seconds: 1)));
+      }).toList();
+
       final bytes = ExcelExportService.exportComprehensiveFinancialReportToExcel(
         salesData: salesData,
         expenses: expenses,
@@ -257,6 +267,7 @@ class ReportsActionsController {
         debtsData: debtsData,
         inventoryData: inventoryData,
         range: range,
+        returns: returnsInRange.isNotEmpty ? returnsInRange : null,
       );
 
       final defaultName =

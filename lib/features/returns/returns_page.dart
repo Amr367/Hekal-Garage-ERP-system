@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/db/database.dart';
+import '../../core/services/excel_export_service.dart';
 import '../../core/strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_data_table.dart';
@@ -34,6 +35,25 @@ class ReturnsPage extends ConsumerWidget {
       title: AppStrings.returnsTitle,
       subtitle: AppStrings.returnsSubtitle,
       actions: <Widget>[
+        // Export to Excel
+        OutlinedButton.icon(
+          onPressed: () async {
+            final returns = ref.read(returnsListProvider).asData?.value;
+            if (returns == null || returns.isEmpty) return;
+            final bytes = ExcelExportService.exportReturnsToExcel(returns);
+            if (!context.mounted) return;
+            await ExcelExportService.saveExcelFile(
+              context: context,
+              bytes: bytes,
+              defaultFileName: 'returns_report.xlsx',
+              dialogTitle: 'تصدير سجل المرتجعات إلى Excel',
+              successMessage: 'تم تصدير سجل المرتجعات بنجاح',
+            );
+          },
+          icon: const Icon(Icons.file_download_outlined, size: 18),
+          label: const Text('تصدير إكسيل'),
+        ),
+        const SizedBox(width: 8),
         // New Supplier Purchase Return
         OutlinedButton.icon(
           onPressed: () => NewPurchaseReturnDialog.show(context),

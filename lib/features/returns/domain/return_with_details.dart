@@ -38,6 +38,7 @@ class ReturnWithDetails {
     }
   }
 
+  DateTime get createdAt => entry.createdAt;
   int get totalAmount => entry.totalAmount;
   String get formattedTotalAmount => MoneyFormat.formatWithCurrency(totalAmount);
   String get formattedDate => DateFormat('dd/MM/yyyy hh:mm a').format(entry.createdAt);
